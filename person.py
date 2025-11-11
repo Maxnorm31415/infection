@@ -31,10 +31,12 @@ class Human:
         return random.uniform(0, 1) <= chance
 
 class Infected(Human):
-
+    virus_live = 0
+    virus_level = 1
     def __init__(self, human):
         super().__init__(human.pos_x, human.pos_y, human.firstname, human.lastname, human.age, human.social_rang, human.travel_rang)
         self.infection = True
+        self.virus_live = int(0.346*human.age + 2.308)
 
     def try_travel(self):
         chance = 0.015*self.travel_rang
