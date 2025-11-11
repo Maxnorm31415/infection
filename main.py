@@ -29,12 +29,12 @@ def make_continents():
     # Eurasia – 65.7%, Africa – 19.1%, North America – 8.9%, South America – 5.5%, Australia – 0.7%, Greenland – 0.1%.
     # bounds(x_min,y_min,x_max,y_max)
     continents = {
-        "north_america":  {"bounds": (277,434,535,748), "max_people": 20 + int(total_people * 0.089), "infection_rang":9},
-        "south_america":  {"bounds": (84,74,380,322), "max_people": 20 + int(total_people * 0.055), "infection_rang":6},
-        "eurasia":        {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.657), "infection_rang":7},
+        "south_america":  {"bounds": (277,434,535,748), "max_people": 20 + int(total_people * 0.089), "infection_rang":9},
+        "north_america":  {"bounds": (84,74,380,322), "max_people": 20 + int(total_people * 0.055), "infection_rang":6},
+        "eurasia":        {"bounds": (586,39,1447,378), "max_people": 20 + int(total_people * 0.657), "infection_rang":7},
         "africa":         {"bounds": (636,272,988,710), "max_people": 20 + int(total_people * 0.191), "infection_rang":3},
         "australia":      {"bounds": (1370,587,1589,737), "max_people": 20 + int(total_people * 0.007), "infection_rang":9},
-        "greenland":      {"bounds": (586,39,1447,378), "max_people": 20 + int(total_people * 0.001), "infection_rang":6},
+        "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "infection_rang":6},
     }
     total_people = 0
     for continent in continents:
@@ -62,6 +62,10 @@ def make_humans(boards):
                     list_humans.append(Human(x,y,continents[cont]))
                     finish = True
 
+def draw_humans(surface):
+    for hum in list_humans:
+        pygame.draw.circle(surface, hum.color, (hum.pos_x, hum.pos_y), 4)
+
 def main():
     screen = pygame.display.set_mode((1600, 821))
     pygame.display.set_caption("Human Infection")
@@ -79,9 +83,11 @@ def main():
                 return
             if event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
-        print(on_the_land(mouse_pos[0], mouse_pos[1], mask))
+        #print(on_the_land(mouse_pos[0], mouse_pos[1], mask))
+        print(mouse_pos)
         screen.fill(BLACK)
         screen.blit(world, (0, 0))
+        draw_humans(screen)
         pygame.display.update()
         clock.tick(FRAMES_PER_SECOND)
 
