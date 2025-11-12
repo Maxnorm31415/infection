@@ -50,7 +50,7 @@ def make_continents():
     continents = {
         "south_america":  {"bounds": (277,434,535,748), "max_people": 20 + int(total_people * 0.089),"airport":(440,552), "infection_rang":9},
         "north_america":  {"bounds": (84,74,380,322), "max_people": 20 + int(total_people * 0.055),"airport":(260,155), "infection_rang":6},
-        "eurasia":        {"bounds": (586,39,1447,268), "max_people": 20 + int(total_people * 0.657),"airport":(1034,235), "infection_rang":7},
+        "eurasia":        {"bounds": (785,39,1447,268), "max_people": 20 + int(total_people * 0.657),"airport":(1034,235), "infection_rang":7},
         "africa":         {"bounds": (636,306,988,710), "max_people": 20 + int(total_people * 0.191),"airport":(722,330), "infection_rang":3},
         "australia":      {"bounds": (1370,587,1589,737), "max_people": 20 + int(total_people * 0.007),"airport":(1450,660), "infection_rang":9},
         "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "airport":(620,35), "infection_rang":6},
@@ -115,8 +115,7 @@ def flying(surface):
         passenger.id = max-1
         list_infected.append(passenger.id)
         list_humans.insert(max, passenger)
-        print(max, len(list_humans)-1)
-        for i in range(max,len(list_humans)-1):
+        for i in range(max,len(list_humans)):
             if list_humans[i].infection:
                 list_infected.remove(list_humans[i].id)
                 list_infected.append(list_humans[i].id+1)
@@ -180,7 +179,9 @@ def make_travel(hum):
         while not finish:
             continent_new = random.choice(list_airports)
             end = continents[continent_new]["airport"]
-            if end != start:
+            if end[0] == start[0] and end[1] == start[1]:
+                continue
+            else:
                 finish = True
         aircraft_pos = start
         vector = ((end[0] - start[0]), (end[1] - start[1]))
@@ -191,11 +192,12 @@ def make_travel(hum):
             aircraft = pygame.transform.rotate(aircraft_right, angle)
         list_humans.remove(hum)
         list_infected.remove(hum.id)
-        for i in range(hum.id, len(list_humans) - 1):
+        for i in range(hum.id, len(list_humans)):
             if list_humans[i].infection:
                 list_infected.remove(list_humans[i].id)
                 list_infected.append(list_humans[i].id - 1)
             list_humans[i].id -= 1
+
 
 
 def move_humans(boards):
@@ -216,7 +218,7 @@ def move_humans(boards):
                 list_humans[hum.id] = Human(hum.id,hum.pos_x, hum.pos_y,hum.continent, False,hum.firstname,
                                             hum.lastname, hum.age, hum.social_rang, hum.travel_rang,hum.immunity + 1)
                 list_infected.remove(hum.id)
-        if hum.infection and not travel and len(list_infected) < len(list_humans):
+        if hum.infection and not travel and len(list_infected) < len(list_humans)/2:
             make_travel(hum)
 
     if change_virus_stage:
@@ -259,9 +261,12 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
-           # if event.type == pygame.KEYDOWN:
-            #if event.type == pygame.MOUSEMOTION:
-               # mouse_pos = pygame.mouse.get_pos()
+            #if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_l:
+                    for hum in list_humans:
+                        print(hum.infection, hum.continent, hum.pos_x, hum.pos_y)
+           # if event.type == pygame.MOUSEMOTION:
+                mouse_pos = pygame.mouse.get_pos()
         #print(on_the_land(mouse_pos[0], mouse_pos[1], mask))
         #print(mouse_pos)
         screen.fill(BLACK)
@@ -287,6 +292,7 @@ def main():
                 print("Infected:")
                 for inf in list_infected:
                     print(inf)
+                EOFError(e)
                 pygame.quit()
             count_speed = 0
         pygame.display.update()

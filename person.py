@@ -59,7 +59,7 @@ class Infected(Human):
         self.virus_live = int(0.346*human.age + 2.308)
 
     def try_travel(self):
-        chance = 0.015*self.travel_rang
+        chance = 0.0015*self.travel_rang
         return random.uniform(0,1)<= chance
 
     def try_speek(self, human):
