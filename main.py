@@ -78,11 +78,11 @@ def check_movement(x,y,board,cont):
         return True
     else: return False
 
-def infected(hum):
+def infected(hum,v_lvl,immun):
     global list_infected, list_humans
     index = hum.id
     list_infected.append(index)
-    list_humans[index] = Infected(hum)
+    list_humans[index] = Infected(hum,v_lvl,immun)
 
 def flying(surface):
     global aircraft_pos, counter, travel, list_humans,list_infected, travel_ready
@@ -198,6 +198,8 @@ def make_travel(hum):
 def move_humans(boards):
     global change_virus_stage
     for hum in list_humans:
+        if not hum.alive:
+            continue
         finish = False
         while(not finish):
             angle = random.uniform(0, 2*math.pi)
@@ -209,9 +211,10 @@ def move_humans(boards):
                 finish = True
         if hum.infection and change_virus_stage:
             hum.virus_live -= 1
+            hum.update()
             if hum.virus_live == 0:
                 list_humans[hum.id] = Human(hum.id,hum.pos_x, hum.pos_y,hum.continent, False,hum.firstname,
-                                            hum.lastname, hum.age, hum.social_rang, hum.travel_rang,hum.immunity + 1)
+                                            hum.lastname, hum.age, hum.social_rang, hum.travel_rang,(hum.immunity + 1))
                 list_infected.remove(hum.id)
         if hum.infection and not travel and travel_ready:
             make_travel(hum)
@@ -222,6 +225,8 @@ def move_humans(boards):
 def speek():
     global list_infected
     for i in list_infected:
+        if not list_humans[i].alive:
+            continue
         hum = list_humans[i]
         neighbors = found_neighbors(hum.pos_x, hum.pos_y, hum.continent)
         if len(neighbors) > 0:
@@ -230,7 +235,7 @@ def speek():
             if hum.try_speek(neighbor):
                 if neighbor.try_infection():
                     #print(neighbor.lastname, neighbor.firstname, "infected")
-                    infected(neighbor)
+                    infected(neighbor, hum.virus_level, hum.immunity)
 
 def main():
     global change_virus_stage, aircraft_left, aircraft_right, travel_ready
@@ -244,7 +249,7 @@ def main():
     mouse_pos = pygame.mouse.get_pos()
     make_continents()
     make_humans(mask)
-    infected(random.choice(list_humans))
+    infected(random.choice(list_humans),1,0)
     count_speed = 0
     count_virus = 0
     count_travel = 0
@@ -257,10 +262,13 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
-            #if event.type == pygame.KEYDOWN:
+            if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_l:
                     for hum in list_humans:
-                        print(hum.infection, hum.continent, hum.pos_x, hum.pos_y)
+                        if hum.infection:
+                            print(hum.infection,hum.virus_level, hum.virus_live, hum.immunity,hum.continent)
+                        else:
+                            print(hum.infection,hum.immunity, hum.continent)
            # if event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
         #print(on_the_land(mouse_pos[0], mouse_pos[1], mask))
