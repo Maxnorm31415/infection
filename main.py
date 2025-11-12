@@ -9,7 +9,7 @@ BLACK = (0, 0, 0)
 
 total_people = 600 #min 120
 steps = 3
-radius_speek = 10
+radius_speek = 4
 
 continents = {}
 list_humans = []
@@ -17,8 +17,10 @@ list_infected = []
 FRAMES_PER_SECOND = 60
 SPEED = 1
 virus_stage = 200
+time_for_travel = 200
 
 change_virus_stage = False
+travel_ready = False
 
 aircraft_left = pygame.image.load('airplane_left.png')
 aircraft_right = pygame.image.load('airplane_right.png')
@@ -73,16 +75,6 @@ def check_movement(x,y,board,cont):
     if x > screen_width or x < 0 or y > screen_height or y < 0:
         return False
     if board.get_at((x,y)):
-        min = 0
-        max = continents["south_america"]["max_people"]
-        for con in continents:
-            if con == cont:
-                max = min + continents[con]["max_people"]
-            else:
-                min += continents[con]["max_people"]
-        for i in range(min,max):
-            if x == list_humans[i].pos_x and y == list_humans[i].pos_y:
-                return False
         return True
     else: return False
 
@@ -93,7 +85,7 @@ def infected(hum):
     list_humans[index] = Infected(hum)
 
 def flying(surface):
-    global aircraft_pos, counter, travel, list_humans,list_infected
+    global aircraft_pos, counter, travel, list_humans,list_infected, travel_ready
     if counter != 100:
         surface.blit(aircraft, (aircraft_pos[0], aircraft_pos[1]))
         aircraft_pos[0] += vector[0]/100
@@ -125,6 +117,7 @@ def flying(surface):
             #print(hu.id, hu.continent)
         counter = 0
         travel = False
+        travel_ready = False
 
 def found_neighbors(x,y,cont):
     list_neighbors = []
@@ -184,12 +177,14 @@ def make_travel(hum):
             else:
                 finish = True
         aircraft_pos = start
-        vector = ((end[0] - start[0]), (end[1] - start[1]))
-        angle = math.degrees(math.atan2(vector[0], vector[1]))
+        vector = ((end[0] - start[0]), (end[1]) - start[1])
+        angle = math.degrees(math.atan2(vector[1], vector[0]))
+        angle = -angle
         if abs(angle) < 90:
-            aircraft = pygame.transform.rotate(aircraft_left, angle)
-        else:
             aircraft = pygame.transform.rotate(aircraft_right, angle)
+        else:
+            #angle = 180 - abs(angle)
+            aircraft = pygame.transform.rotate(aircraft_left, angle)
         list_humans.remove(hum)
         list_infected.remove(hum.id)
         for i in range(hum.id, len(list_humans)):
@@ -218,7 +213,7 @@ def move_humans(boards):
                 list_humans[hum.id] = Human(hum.id,hum.pos_x, hum.pos_y,hum.continent, False,hum.firstname,
                                             hum.lastname, hum.age, hum.social_rang, hum.travel_rang,hum.immunity + 1)
                 list_infected.remove(hum.id)
-        if hum.infection and not travel and len(list_infected) < len(list_humans)/2:
+        if hum.infection and not travel and travel_ready:
             make_travel(hum)
 
     if change_virus_stage:
@@ -238,7 +233,7 @@ def speek():
                     infected(neighbor)
 
 def main():
-    global change_virus_stage, aircraft_left, aircraft_right
+    global change_virus_stage, aircraft_left, aircraft_right, travel_ready
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
     mask = pygame.mask.from_surface(pygame.image.load('mask.png').convert_alpha())
@@ -252,6 +247,7 @@ def main():
     infected(random.choice(list_humans))
     count_speed = 0
     count_virus = 0
+    count_travel = 0
     while True:
         if len(list_infected) + len(list_humans) > total_people*2:
             print("HAHAHAHAH",len(list_infected),len(list_humans))
@@ -280,6 +276,11 @@ def main():
             count_virus = 0
         else:
             count_virus += 1
+        if not travel_ready:
+            count_travel += 1
+            if count_travel == time_for_travel:
+                travel_ready = True
+                count_travel = 0
         if (count_speed % SPEED == 0):
            # print(len(list_infected))
             move_humans(mask)
