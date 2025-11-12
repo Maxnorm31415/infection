@@ -87,7 +87,7 @@ def infected(hum,v_lvl,immun):
 def flying(surface):
     global aircraft_pos, counter, travel, list_humans,list_infected, travel_ready
     if counter != 100:
-        surface.blit(aircraft, (aircraft_pos[0], aircraft_pos[1]))
+        surface.blit(aircraft, (aircraft_pos[0] + 36, aircraft_pos[1] - 25))
         aircraft_pos[0] += vector[0]/100
         aircraft_pos[1] += vector[1]/100
         counter += 1

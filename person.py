@@ -87,17 +87,19 @@ class Infected(Human):
         else: return False
 
     def update(self):
-        self.streak += 1
-        if self.virus_level > 1:
-            if random.uniform(0,1) < self.die_chance:
-                self.alive = False
-                self.color = BLACK
-        if self.streak == 17 and self.virus_level < 3:
-            self.virus_level += 1
-            self.die_chance = (self.virus_level - 1) * 0.0015
-            self.virus_live += random.randint(5,20)
-            self.immunity += 1
-            if self.virus_level == 2:
-                self.color = PINK
-            else:
-                self.color = ORANGE
+        if self.alive:
+            self.streak += 1
+            if self.virus_level > 1:
+                if random.uniform(0,1) < self.die_chance:
+                    self.alive = False
+                    self.color = BLACK
+            if self.streak == 17 and self.virus_level < 3:
+                self.virus_level += 1
+                self.die_chance = (self.virus_level - 1) * 0.0015
+                self.virus_live += random.randint(5,20)
+                self.immunity += 1
+                self.streak = 0
+                if self.virus_level == 2:
+                    self.color = PINK
+                else:
+                    self.color = ORANGE
