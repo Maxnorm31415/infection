@@ -1,19 +1,21 @@
-import pygame, random
+import pygame, random, math
 import numpy as np
 from person import Human, Infected
 
 BLACK = (0, 0, 0)
 
 total_people = 1200 #min 120
+steps = 3
 
 continents = {}
 list_humans = []
 list_infected = []
 FRAMES_PER_SECOND = 60
+SPEED = 2
 
 pygame.init()
 
-
+screen_width, screen_height = 1600, 821
 
 def on_the_land(x,y,mask1):
     if mask1.get_at((x,y)):
@@ -50,6 +52,24 @@ def check_spawn(x,y,num,board):
     else: return False
 
 
+def check_movement(x,y,board,cont):
+    if x > screen_width or x < 0 or y > screen_height or y < 0:
+        return False
+    if board.get_at((x,y)):
+        min = 0
+        max = continents["south_america"]["max_people"]
+        for con in continents:
+            if con == cont:
+                max = min + continents[con]["max_people"]
+            else:
+                min += continents[con]["max_people"]
+        for i in range(min,max):
+            if x == list_humans[i].pos_x and y == list_humans[i].pos_y:
+                return False
+        return True
+    else: return False
+
+
 def make_humans(boards):
     global list_humans
     for cont in continents:
@@ -66,8 +86,20 @@ def draw_humans(surface):
     for hum in list_humans:
         pygame.draw.circle(surface, hum.color, (hum.pos_x, hum.pos_y), 4)
 
+def move_humans(boards):
+    for hum in list_humans:
+        finish = False
+        while(not finish):
+            angle = random.uniform(0, 2*math.pi)
+            x = hum.pos_x + math.cos(angle)*steps
+            y = hum.pos_y + math.sin(angle)*steps
+            if check_movement(x,y,boards,hum.continent):
+                hum.pos_x = x
+                hum.pos_y = y
+                finish = True
+
 def main():
-    screen = pygame.display.set_mode((1600, 821))
+    screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
     mask = pygame.mask.from_surface(pygame.image.load('mask.png').convert_alpha())
     world = pygame.image.load('world.png').convert()
@@ -75,6 +107,7 @@ def main():
     mouse_pos = pygame.mouse.get_pos()
     make_continents()
     make_humans(mask)
+    count_speed = 0
     while True:
         # event handling
         for event in pygame.event.get():
@@ -84,10 +117,14 @@ def main():
             if event.type == pygame.MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
         #print(on_the_land(mouse_pos[0], mouse_pos[1], mask))
-        print(mouse_pos)
+        #print(mouse_pos)
         screen.fill(BLACK)
         screen.blit(world, (0, 0))
         draw_humans(screen)
+        count_speed += 1
+        if (count_speed % SPEED == 0):
+            move_humans(mask)
+            count_speed = 0
         pygame.display.update()
         clock.tick(FRAMES_PER_SECOND)
 
