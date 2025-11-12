@@ -6,12 +6,13 @@ BLACK = (0, 0, 0)
 
 total_people = 1200 #min 120
 steps = 3
+radius_speek = 5
 
 continents = {}
 list_humans = []
 list_infected = []
 FRAMES_PER_SECOND = 60
-SPEED = 2
+SPEED = 1
 
 pygame.init()
 
@@ -69,9 +70,32 @@ def check_movement(x,y,board,cont):
         return True
     else: return False
 
+def infected(hum):
+    global list_infected, list_humans
+    index = hum.id
+    list_infected.append(index)
+    list_humans[index] = Infected(hum)
+
+def found_neighbors(x,y,cont):
+    list_neighbors = []
+    min = 0
+    max = continents["south_america"]["max_people"]
+    for con in continents:
+        if con == cont:
+            max = min + continents[con]["max_people"]
+            break
+        else:
+            min += continents[con]["max_people"]
+    for i in range(min, max):
+        if list_humans[i].infection:
+            continue
+        elif ((list_humans[i].pos_x) - x)**2 + ((list_humans[i].pos_y) - y)**2 < radius_speek**2:
+            list_neighbors.append(i)
+    return list_neighbors
 
 def make_humans(boards):
     global list_humans
+    index = 0
     for cont in continents:
         for i in range(continents[cont]["max_people"]):
             finish = False
@@ -79,12 +103,14 @@ def make_humans(boards):
                 x = random.randint(continents[cont]["bounds"][0],continents[cont]["bounds"][2])
                 y = random.randint(continents[cont]["bounds"][1],continents[cont]["bounds"][3])
                 if check_spawn(x,y,i,boards):
-                    list_humans.append(Human(x,y,continents[cont]))
+                    list_humans.append(Human(index,x,y,cont))
                     finish = True
+            index += 1
 
 def draw_humans(surface):
     for hum in list_humans:
         pygame.draw.circle(surface, hum.color, (hum.pos_x, hum.pos_y), 4)
+
 
 def move_humans(boards):
     for hum in list_humans:
@@ -98,6 +124,20 @@ def move_humans(boards):
                 hum.pos_y = y
                 finish = True
 
+def speek():
+    global list_infected
+    for i in list_infected:
+        hum = list_humans[i]
+        neighbors = found_neighbors(hum.pos_x, hum.pos_y, hum.continent)
+        if len(neighbors) > 0:
+            index = random.choice(neighbors)
+            neighbor = list_humans[index]
+            if hum.try_speek(neighbor):
+                #print(hum.lastname, hum.firstname, "speek with", neighbor.lastname, neighbor.firstname)
+                if neighbor.try_infection():
+                    print(neighbor.lastname, neighbor.firstname, "infected")
+                    infected(neighbor)
+
 def main():
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
@@ -107,6 +147,7 @@ def main():
     mouse_pos = pygame.mouse.get_pos()
     make_continents()
     make_humans(mask)
+    infected(random.choice(list_humans))
     count_speed = 0
     while True:
         # event handling
@@ -124,6 +165,7 @@ def main():
         count_speed += 1
         if (count_speed % SPEED == 0):
             move_humans(mask)
+            speek()
             count_speed = 0
         pygame.display.update()
         clock.tick(FRAMES_PER_SECOND)
