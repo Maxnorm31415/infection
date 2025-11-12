@@ -4,15 +4,16 @@ from person import Human, Infected
 
 BLACK = (0, 0, 0)
 
-total_people = 1200 #min 120
+total_people = 600 #min 120
 steps = 3
-radius_speek = 5
+radius_speek = 10
 
 continents = {}
 list_humans = []
 list_infected = []
 FRAMES_PER_SECOND = 60
 SPEED = 1
+
 
 pygame.init()
 
@@ -34,8 +35,8 @@ def make_continents():
     continents = {
         "south_america":  {"bounds": (277,434,535,748), "max_people": 20 + int(total_people * 0.089), "infection_rang":9},
         "north_america":  {"bounds": (84,74,380,322), "max_people": 20 + int(total_people * 0.055), "infection_rang":6},
-        "eurasia":        {"bounds": (586,39,1447,378), "max_people": 20 + int(total_people * 0.657), "infection_rang":7},
-        "africa":         {"bounds": (636,272,988,710), "max_people": 20 + int(total_people * 0.191), "infection_rang":3},
+        "eurasia":        {"bounds": (586,39,1447,268), "max_people": 20 + int(total_people * 0.657), "infection_rang":7},
+        "africa":         {"bounds": (636,306,988,710), "max_people": 20 + int(total_people * 0.191), "infection_rang":3},
         "australia":      {"bounds": (1370,587,1589,737), "max_people": 20 + int(total_people * 0.007), "infection_rang":9},
         "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "infection_rang":6},
     }
@@ -89,7 +90,7 @@ def found_neighbors(x,y,cont):
     for i in range(min, max):
         if list_humans[i].infection:
             continue
-        elif ((list_humans[i].pos_x) - x)**2 + ((list_humans[i].pos_y) - y)**2 < radius_speek**2:
+        elif (((list_humans[i].pos_x) - x)**2) + (((list_humans[i].pos_y) - y)**2) <= radius_speek**2:
             list_neighbors.append(i)
     return list_neighbors
 
@@ -133,12 +134,12 @@ def speek():
             index = random.choice(neighbors)
             neighbor = list_humans[index]
             if hum.try_speek(neighbor):
-                #print(hum.lastname, hum.firstname, "speek with", neighbor.lastname, neighbor.firstname)
                 if neighbor.try_infection():
-                    print(neighbor.lastname, neighbor.firstname, "infected")
+                    #print(neighbor.lastname, neighbor.firstname, "infected")
                     infected(neighbor)
 
 def main():
+    global prin
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
     mask = pygame.mask.from_surface(pygame.image.load('mask.png').convert_alpha())
@@ -155,8 +156,9 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
-            if event.type == pygame.MOUSEMOTION:
-                mouse_pos = pygame.mouse.get_pos()
+           # if event.type == pygame.KEYDOWN:
+            #if event.type == pygame.MOUSEMOTION:
+               # mouse_pos = pygame.mouse.get_pos()
         #print(on_the_land(mouse_pos[0], mouse_pos[1], mask))
         #print(mouse_pos)
         screen.fill(BLACK)
