@@ -28,8 +28,8 @@ change_virus_stage = False
 travel_ready = False
 pause = False
 
-aircraft_left = pygame.image.load('airplane_left.png')
-aircraft_right = pygame.image.load('airplane_right.png')
+aircraft_left = pygame.image.load("images/airplane_left.png")
+aircraft_right = pygame.image.load("images/airplane_right.png")
 
 #For travel:
 travel = False
@@ -90,7 +90,7 @@ def make_continents():
 
 def make_diagrams(surface, check):
     global diagram
-    diagram_img = pygame.image.load('diagram.png')
+    diagram_img = pygame.image.load("images/diagram.png")
     start_point_x = 940
     start_point_y = 689
     if check:
@@ -111,7 +111,7 @@ def make_diagrams(surface, check):
     pygame.draw.line(surface, color_healthy, (start_point_x + 10, start_point_y + 50),(start_point_x + 50, start_point_y + 50), 3)
     pygame.draw.line(surface, color_infected, (start_point_x + 10, start_point_y + 82),(start_point_x + 50, start_point_y + 82), 3)
     pygame.draw.line(surface, color_deaths, (start_point_x + 10, start_point_y + 114),(start_point_x + 50, start_point_y + 114), 3)
-    font = pygame.font.Font('font_for_numbers.otf', 20)
+    font = pygame.font.Font("fonts/font_for_numbers.otf", 20)
     max_people = total_people
     start_text_x = start_point_x + 52
     start_text_y = start_point_y
@@ -127,7 +127,7 @@ def make_diagrams(surface, check):
         else:
             max_people -= int(total_people/5)
     seconds = int(ticked/10)
-    font_sec = pygame.font.Font('font_for_numbers.otf', 16)
+    font_sec = pygame.font.Font("fonts/font_for_numbers.otf", 16)
     min = 0
     max = 0
     step = 19 / 10
@@ -222,7 +222,7 @@ def make_stats(surface):
         "Infected people in Australia:": continents_infected["australia"],
         "Infected people in Greenland:": continents_infected["greenland"],
     }
-    font = pygame.font.Font("font_for_game.ttf", 38)
+    font = pygame.font.Font("fonts/font_for_game.ttf", 38)
     start_point_x = 100
     start_point_y = 35
     count = 1
@@ -415,12 +415,12 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
-    mask = pygame.mask.from_surface(pygame.image.load('mask.png').convert_alpha())
-    world = pygame.image.load('world.png').convert()
+    mask = pygame.mask.from_surface(pygame.image.load("images/mask.png").convert_alpha())
+    world = pygame.image.load("images/world.png").convert()
     aircraft_left = aircraft_right.convert_alpha()
     aircraft_right = aircraft_left.convert_alpha()
-    stat_icon = pygame.image.load('stat.png').convert_alpha()
-    button_icon = pygame.image.load('button.png').convert_alpha()
+    stat_icon = pygame.image.load("images/stat.png").convert_alpha()
+    button_icon = pygame.image.load("images/button.png").convert_alpha()
     clock = pygame.time.Clock()
     mouse_pos = [0,0]
     make_continents()
