@@ -3,9 +3,12 @@ from warnings import catch_warnings
 
 import pygame, random, math
 import numpy as np
+from pygame import MOUSEMOTION
+
 from person import Human, Infected
 
 BLACK = (0, 0, 0)
+GRAY = (39, 41, 37)
 
 total_people = 600 #min 120
 steps = 3
@@ -21,6 +24,7 @@ time_for_travel = 200
 
 change_virus_stage = False
 travel_ready = False
+pause = False
 
 aircraft_left = pygame.image.load('airplane_left.png')
 aircraft_right = pygame.image.load('airplane_right.png')
@@ -36,8 +40,9 @@ counter = 0
 
 screen_width, screen_height = 1600, 821
 
-def on_the_land(x,y,mask1):
-    if mask1.get_at((x,y)):
+def check_on_mask(x,y,x_min,x_max,y_min,y_max):
+    y = screen_height-y
+    if x >= x_min and x <= x_max and y>=y_min and y <= y_max:
         return True
     else:
         return False
@@ -238,13 +243,15 @@ def speek():
                     infected(neighbor, hum.virus_level, hum.immunity)
 
 def main():
-    global change_virus_stage, aircraft_left, aircraft_right, travel_ready
+    global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
     mask = pygame.mask.from_surface(pygame.image.load('mask.png').convert_alpha())
     world = pygame.image.load('world.png').convert()
     aircraft_left = aircraft_right.convert_alpha()
     aircraft_right = aircraft_left.convert_alpha()
+    stat_icon = pygame.image.load('stat.png').convert_alpha()
+    button_icon = pygame.image.load('button.png').convert_alpha()
     clock = pygame.time.Clock()
     mouse_pos = pygame.mouse.get_pos()
     make_continents()
@@ -262,48 +269,41 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_l:
-                    for hum in list_humans:
-                        if hum.infection:
-                            print(hum.infection,hum.virus_level, hum.virus_live, hum.immunity,hum.continent)
-                        else:
-                            print(hum.infection,hum.immunity, hum.continent)
-           # if event.type == pygame.MOUSEMOTION:
+            if event.type == MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
-        #print(on_the_land(mouse_pos[0], mouse_pos[1], mask))
-        #print(mouse_pos)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if not pause and check_on_mask(mouse_pos[0], mouse_pos[1], 10, 110, 10, 110):
+                    pause = True
+                if pause and check_on_mask(mouse_pos[0], mouse_pos[1], screen_width/2-button_icon.get_width()-10, screen_width/2-10,
+                                        screen_height- (10 + button_icon.get_height()), screen_height - 10):
+                    pause = False
         screen.fill(BLACK)
         screen.blit(world, (0, 0))
-        if travel:
-            flying(screen)
         draw_humans(screen)
-        count_speed += 1
-        if count_virus == virus_stage:
-            change_virus_stage = True
-            count_virus = 0
-        else:
-            count_virus += 1
-        if not travel_ready:
-            count_travel += 1
-            if count_travel == time_for_travel:
-                travel_ready = True
-                count_travel = 0
-        if (count_speed % SPEED == 0):
-           # print(len(list_infected))
-            move_humans(mask)
-            try:
+        if not pause:
+            screen.blit(stat_icon, (10,screen_height-stat_icon.get_height() - 10))
+            if travel:
+                flying(screen)
+            count_speed += 1
+            if count_virus == virus_stage:
+                change_virus_stage = True
+                count_virus = 0
+            else:
+                count_virus += 1
+            if not travel_ready:
+                count_travel += 1
+                if count_travel == time_for_travel:
+                    travel_ready = True
+                    count_travel = 0
+            if (count_speed % SPEED == 0):
+               # print(len(list_infected))
+                move_humans(mask)
                 speek()
-            except Exception as e:
-                print("Humans id:")
-                for hu in list_humans:
-                    print(hu.id, hu.infection, hu.continent)
-                print("Infected:")
-                for inf in list_infected:
-                    print(inf)
-                EOFError(e)
-                pygame.quit()
-            count_speed = 0
+                count_speed = 0
+        else:
+            window_stat = (0,0,screen_width/2, screen_height)
+            pygame.draw.rect(screen,GRAY,window_stat)
+            screen.blit(button_icon, ((screen_width/2 - button_icon.get_width() - 10),10))
         pygame.display.update()
         clock.tick(FRAMES_PER_SECOND)
 
