@@ -14,6 +14,7 @@ GRAY = (39, 41, 37)
 total_people = 600 #min 120
 steps = 3
 radius_speek = 4
+ticked = 1
 
 continents = {}
 list_humans = []
@@ -40,11 +41,30 @@ continent_new = ""
 counter = 0
 flight_time = 0
 
+#For diagrams:
+color_healthy = (0,0,255)
+color_infected = (255,0,0)
+color_deaths = (0,0,0)
+diagram = {
+    'healthy':[],
+    'infected':[],
+    'death':[]
+}
+
 screen_width, screen_height = 1600, 821
 
 def check_on_mask(x,y,x_min,x_max,y_min,y_max):
     y = screen_height-y
     if x >= x_min and x <= x_max and y>=y_min and y <= y_max:
+        return True
+    else:
+        return False
+
+def get_ticks():
+    global ticked
+    tick = pygame.time.get_ticks()
+    if tick/(100*ticked) >= 1:
+        ticked += 1
         return True
     else:
         return False
@@ -67,6 +87,85 @@ def make_continents():
     total_people = 0
     for continent in continents:
         total_people += continents[continent]["max_people"]
+
+def make_diagrams(surface, check):
+    global diagram
+    diagram_img = pygame.image.load('diagram.png')
+    start_point_x = 940
+    start_point_y = 689
+    if check:
+        healthy = 0
+        infected_people = 0
+        deaths = 0
+        for hum in list_humans:
+            if not hum.alive:
+               deaths += 1
+            elif not hum.infection:
+                healthy += 1
+            else:
+                infected_people += 1
+        diagram['healthy'].append(healthy)
+        diagram['infected'].append(infected_people)
+        diagram['death'].append(deaths)
+    surface.blit(diagram_img, (start_point_x, start_point_y))
+    pygame.draw.line(surface, color_healthy, (start_point_x + 10, start_point_y + 50),(start_point_x + 50, start_point_y + 50), 3)
+    pygame.draw.line(surface, color_infected, (start_point_x + 10, start_point_y + 82),(start_point_x + 50, start_point_y + 82), 3)
+    pygame.draw.line(surface, color_deaths, (start_point_x + 10, start_point_y + 114),(start_point_x + 50, start_point_y + 114), 3)
+    font = pygame.font.Font('font_for_numbers.otf', 20)
+    max_people = total_people
+    start_text_x = start_point_x + 52
+    start_text_y = start_point_y
+    max_width_text = 31
+    for i in range(6):
+        text_num = font.render(str(max_people), True, BLACK)
+        if text_num.get_width() < max_width_text:
+            start_text_x += max_width_text - text_num.get_width()
+        surface.blit(text_num, (start_text_x, start_text_y))
+        start_text_x = start_point_x + 52
+        start_text_y += 20
+        if i == 4: max_people = 0
+        else:
+            max_people -= int(total_people/5)
+    seconds = int(ticked/10)
+    font_sec = pygame.font.Font('font_for_numbers.otf', 16)
+    min = 0
+    max = 0
+    step = 19 / 10
+    start_sec_x = start_point_x + 85
+    start_sec_y = start_point_y + 108
+    if seconds < 15:
+        min = 0
+    else:
+        min = seconds - 15
+    for sec in range(min,seconds + 1):
+        text_sec = font_sec.render(str(sec), True, BLACK)
+        surface.blit(text_sec, (start_sec_x, start_sec_y))
+        start_sec_x += step * 10
+    size = 103
+    #if len(diagram[dia]) != 0:
+    for dia in diagram:
+        color_line = ()
+        if dia == 'healthy':
+            color_line = color_healthy
+        elif dia == 'infected':
+            color_line = color_infected
+        else:
+            color_line = color_deaths
+        start_line_x = start_point_x + 87.00
+        end_line_x = start_line_x - step
+        max = len(diagram[dia])
+        if max < 160:
+            min = 0
+        else:
+            min = max - 160
+        start_line_y = start_point_y + 5 + size - (size * (diagram[dia][min] / total_people))
+        end_line_y = start_line_y
+        for num in range(min,max):
+            end_line_x += step
+            end_line_y = (start_point_y + 5+ size - (size * (diagram[dia][num]/total_people)))
+            pygame.draw.line(surface,color_line,(start_line_x, start_line_y),(end_line_x, end_line_y), 4)
+            start_line_x = end_line_x
+            start_line_y = end_line_y
 
 def make_stats(surface):
     healthy = 0
@@ -323,6 +422,7 @@ def main():
     stat_icon = pygame.image.load('stat.png').convert_alpha()
     button_icon = pygame.image.load('button.png').convert_alpha()
     clock = pygame.time.Clock()
+    mouse_pos = [0,0]
     make_continents()
     make_humans(mask)
     infected(random.choice(list_humans),1,0)
@@ -330,9 +430,6 @@ def main():
     count_virus = 0
     count_travel = 0
     while True:
-        if len(list_infected) + len(list_humans) > total_people*2:
-            print("HAHAHAHAH",len(list_infected),len(list_humans))
-            pygame.quit()
         # event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -349,6 +446,7 @@ def main():
         screen.fill(BLACK)
         screen.blit(world, (0, 0))
         draw_humans(screen)
+        make_diagrams(screen, get_ticks())
         if not pause:
             screen.blit(stat_icon, (10,screen_height-stat_icon.get_height() - 10))
             if travel:
