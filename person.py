@@ -41,6 +41,7 @@ class Human:
             self.social_rang = s_r
             self.travel_rang = t_r
         if not inf:
+            self.infection = False
             if self.immunity == 0:
                 self.color = DARK_GREEN
             elif self.immunity == 1:

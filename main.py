@@ -7,6 +7,7 @@ from pygame import MOUSEMOTION
 
 from person import Human, Infected
 
+WHITE = (225, 225, 225)
 BLACK = (0, 0, 0)
 GRAY = (39, 41, 37)
 
@@ -37,6 +38,7 @@ aircraft_pos = [0,0]
 vector = [0,0]
 continent_new = ""
 counter = 0
+flight_time = 0
 
 screen_width, screen_height = 1600, 821
 
@@ -55,17 +57,83 @@ def make_continents():
     # Eurasia – 65.7%, Africa – 19.1%, North America – 8.9%, South America – 5.5%, Australia – 0.7%, Greenland – 0.1%.
     # bounds(x_min,y_min,x_max,y_max)
     continents = {
-        "south_america":  {"bounds": (277,434,535,748), "max_people": 20 + int(total_people * 0.089),"airport":(440,552), "infection_rang":9},
-        "north_america":  {"bounds": (84,74,380,322), "max_people": 20 + int(total_people * 0.055),"airport":(260,155), "infection_rang":6},
-        "eurasia":        {"bounds": (785,39,1447,268), "max_people": 20 + int(total_people * 0.657),"airport":(1034,235), "infection_rang":7},
-        "africa":         {"bounds": (636,306,988,710), "max_people": 20 + int(total_people * 0.191),"airport":(722,330), "infection_rang":3},
-        "australia":      {"bounds": (1370,587,1589,737), "max_people": 20 + int(total_people * 0.007),"airport":(1450,660), "infection_rang":9},
-        "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "airport":(620,35), "infection_rang":6},
+        "south_america":  {"bounds": (277,434,535,748), "max_people": 20 + int(total_people * 0.089),"airport":(440,552)},
+        "north_america":  {"bounds": (84,74,380,322), "max_people": 20 + int(total_people * 0.055),"airport":(260,155)},
+        "eurasia":        {"bounds": (785,39,1447,268), "max_people": 20 + int(total_people * 0.657),"airport":(1034,235)},
+        "africa":         {"bounds": (636,306,988,710), "max_people": 20 + int(total_people * 0.191),"airport":(722,330)},
+        "australia":      {"bounds": (1370,587,1589,737), "max_people": 20 + int(total_people * 0.007),"airport":(1450,660)},
+        "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "airport":(620,35),},
     }
     total_people = 0
     for continent in continents:
         total_people += continents[continent]["max_people"]
 
+def make_stats(surface):
+    healthy = 0
+    infected_people = 0
+    deaths = 0
+    virus_level_1 = 0
+    virus_level_2 = 0
+    virus_level_3 = 0
+    index = 0
+    continents_infected = {
+        "south_america": 0,
+        "north_america": 0,
+        "eurasia": 0,
+        "africa": 0,
+        "australia": 0,
+        "greenland": 0,
+    }
+    for con in continents:
+        for i in range(index, index + continents[con]["max_people"]):
+            hum = list_humans[i]
+            if not hum.alive:
+                deaths += 1
+            elif not hum.infection:
+                healthy += 1
+            else:
+                infected_people += 1
+                continents_infected[con] += 1
+                if hum.virus_level == 1:
+                    virus_level_1 += 1
+                elif hum.virus_level == 2:
+                    virus_level_2 += 1
+                else:
+                    virus_level_3 += 1
+        index += continents[con]["max_people"]
+    sentence = {
+        "Total People:": total_people,
+        "Healthy people:": healthy,
+        "Infected people:": infected_people,
+        "Dead people:": deaths,
+        "People infected with the first stage:": virus_level_1,
+        "People infected with the second stage:": virus_level_2,
+        "People infected with the third stage:": virus_level_3,
+        "Number of flights": flight_time,
+        "Number of people in South America:": continents["south_america"]["max_people"],
+        "Number of people in North America:": continents["north_america"]["max_people"],
+        "Number of people in Eurasia:": continents["eurasia"]["max_people"],
+        "Number of people in Africa:": continents["africa"]["max_people"],
+        "Number of people in Australia:": continents["australia"]["max_people"],
+        "Number of people in Greenland:": continents["greenland"]["max_people"],
+        "Infected people in South America:": continents_infected["south_america"],
+        "Infected people in North America:": continents_infected["north_america"],
+        "Infected people in Eurasia:": continents_infected["eurasia"],
+        "Infected people in Africa:": continents_infected["africa"],
+        "Infected people in Australia:": continents_infected["australia"],
+        "Infected people in Greenland:": continents_infected["greenland"],
+    }
+    font = pygame.font.Font("font_for_game.ttf", 38)
+    start_point_x = 100
+    start_point_y = 35
+    count = 1
+    for sent in sentence:
+        text = font.render(sent + " " + str(sentence[sent]), True, WHITE)
+        surface.blit(text, (start_point_x, start_point_y))
+        start_point_y += text.get_height() + 5
+        if count == 8 or count == 14:
+            start_point_y += 15
+        count += 1
 def check_spawn(x,y,num,board):
     if board.get_at((x,y)):
         if len(list_humans) > 0:
@@ -90,7 +158,7 @@ def infected(hum,v_lvl,immun):
     list_humans[index] = Infected(hum,v_lvl,immun)
 
 def flying(surface):
-    global aircraft_pos, counter, travel, list_humans,list_infected, travel_ready
+    global aircraft_pos, flight_time,counter, travel, list_humans,list_infected, travel_ready
     if counter != 100:
         surface.blit(aircraft, (aircraft_pos[0] + 36, aircraft_pos[1] - 25))
         aircraft_pos[0] += vector[0]/100
@@ -121,6 +189,7 @@ def flying(surface):
         #for hu in list_humans:
             #print(hu.id, hu.continent)
         counter = 0
+        flight_time += 1
         travel = False
         travel_ready = False
 
@@ -244,6 +313,7 @@ def speek():
 
 def main():
     global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready
+    pygame.init()
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
     mask = pygame.mask.from_surface(pygame.image.load('mask.png').convert_alpha())
@@ -253,7 +323,6 @@ def main():
     stat_icon = pygame.image.load('stat.png').convert_alpha()
     button_icon = pygame.image.load('button.png').convert_alpha()
     clock = pygame.time.Clock()
-    mouse_pos = pygame.mouse.get_pos()
     make_continents()
     make_humans(mask)
     infected(random.choice(list_humans),1,0)
@@ -304,6 +373,7 @@ def main():
             window_stat = (0,0,screen_width/2, screen_height)
             pygame.draw.rect(screen,GRAY,window_stat)
             screen.blit(button_icon, ((screen_width/2 - button_icon.get_width() - 10),10))
+            make_stats(screen)
         pygame.display.update()
         clock.tick(FRAMES_PER_SECOND)
 
