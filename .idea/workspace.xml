@@ -6,16 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="949b5c76-8626-4cc0-bdfd-802d4bf9fba2" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/airplane_left.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/airplane_right.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/button.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagram.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/font_for_game.ttf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/font_for_numbers.otf" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mask.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/stat.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/world.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -152,6 +143,7 @@
       <workItem from="1762993919582" duration="3462000" />
       <workItem from="1762999135596" duration="49000" />
       <workItem from="1763046157556" duration="9507000" />
+      <workItem from="1763062759490" duration="6344000" />
     </task>
     <servers />
   </component>
@@ -159,8 +151,8 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/infection_project$main.coverage" NAME="main Coverage Results" MODIFIED="1763058101073" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/infection_project$animal_kingdom_pygames_skeleton__w_fish_and_bears_.coverage" NAME="animal kingdom pygames skeleton (w fish and bears) Coverage Results" MODIFIED="1762991657286" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads" />
+    <SUITE FILE_PATH="coverage/infection_project$main.coverage" NAME="main Coverage Results" MODIFIED="1763077625322" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/infection_project$animal_kingdom_pygames_skeleton__w_fish_and_bears_.coverage" NAME="animal kingdom pygames skeleton (w fish and bears) Coverage Results" MODIFIED="1763072176987" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$USER_HOME$/Downloads" />
     <SUITE FILE_PATH="coverage/infection_project$person.coverage" NAME="person Coverage Results" MODIFIED="1762986460845" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/infection$main.coverage" NAME="main Coverage Results" MODIFIED="1762902958742" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>

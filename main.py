@@ -27,6 +27,8 @@ time_for_travel = 200
 change_virus_stage = False
 travel_ready = False
 pause = False
+stat_view = False
+diagrams_view = False
 
 aircraft_left = pygame.image.load("images/airplane_left.png")
 aircraft_right = pygame.image.load("images/airplane_right.png")
@@ -411,7 +413,7 @@ def speek():
                     infected(neighbor, hum.virus_level, hum.immunity)
 
 def main():
-    global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready
+    global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready, stat_view, diagrams_view
     pygame.init()
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
@@ -421,6 +423,9 @@ def main():
     aircraft_right = aircraft_left.convert_alpha()
     stat_icon = pygame.image.load("images/stat.png").convert_alpha()
     button_icon = pygame.image.load("images/button.png").convert_alpha()
+    play = pygame.image.load("images/play.png").convert_alpha()
+    stop = pygame.image.load("images/pause.png").convert_alpha()
+    play_stop = stop
     clock = pygame.time.Clock()
     mouse_pos = [0,0]
     make_continents()
@@ -438,17 +443,39 @@ def main():
             if event.type == MOUSEMOTION:
                 mouse_pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if not pause and check_on_mask(mouse_pos[0], mouse_pos[1], 10, 110, 10, 110):
-                    pause = True
-                if pause and check_on_mask(mouse_pos[0], mouse_pos[1], screen_width/2-button_icon.get_width()-10, screen_width/2-10,
+                if not stat_view and not diagrams_view:
+                    if check_on_mask(mouse_pos[0], mouse_pos[1], 10, 110, 10, 110):
+                        stat_view = True
+                    if check_on_mask(mouse_pos[0], mouse_pos[1], 940, 1339, screen_height - 809,screen_height - 680):
+                        diagrams_view = True
+                if stat_view:
+                    if check_on_mask(mouse_pos[0], mouse_pos[1], screen_width/2-button_icon.get_width()-10, screen_width/2-10,
                                         screen_height- (10 + button_icon.get_height()), screen_height - 10):
-                    pause = False
+                        stat_view = False
+                    if check_on_mask(mouse_pos[0], mouse_pos[1], screen_width - play_stop.get_width()-10, screen_width - 10,
+                                     screen_height - play_stop.get_height() - 10, screen_height - 10):
+                        pause = not pause
+                if diagrams_view and check_on_mask(mouse_pos[0], mouse_pos[1], screen_width - button_icon.get_width()-10, screen_width-10,
+                                                   screen_height- (10 + button_icon.get_height()), screen_height - 10):
+                    diagrams_view = False
+                if not stat_view and check_on_mask(mouse_pos[0],mouse_pos[1], 10, 10 + play_stop.get_width(),
+                                                   screen_height - 10 - play_stop.get_height(), screen_height - 10):
+                    pause = not pause
+                #if check_on_mask(mouse_pos[0],mouse_pos[1])
+        if pause:
+            play_stop = stop
+        else:
+            play_stop = play
         screen.fill(BLACK)
         screen.blit(world, (0, 0))
+        if not stat_view and not diagrams_view:
+            screen.blit(play_stop, (10, 10))
+        elif not diagrams_view:
+            screen.blit(play_stop, (screen_width - play_stop.get_width() - 10, 10))
         draw_humans(screen)
         make_diagrams(screen, get_ticks())
+        screen.blit(stat_icon, (10, screen_height - stat_icon.get_height() - 10))
         if not pause:
-            screen.blit(stat_icon, (10,screen_height-stat_icon.get_height() - 10))
             if travel:
                 flying(screen)
             count_speed += 1
@@ -467,11 +494,19 @@ def main():
                 move_humans(mask)
                 speek()
                 count_speed = 0
-        else:
+        if stat_view:
             window_stat = (0,0,screen_width/2, screen_height)
             pygame.draw.rect(screen,GRAY,window_stat)
             screen.blit(button_icon, ((screen_width/2 - button_icon.get_width() - 10),10))
             make_stats(screen)
+        if diagrams_view:
+            copy_surf = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
+            window_diagrams = (0,0,screen_width,screen_height)
+            pygame.draw.rect(copy_surf,GRAY,window_diagrams)
+            copy_surf.set_alpha(245)
+            screen.blit(copy_surf, (0,0))
+            screen.blit(button_icon, (screen_width - button_icon.get_width() - 10, 10))
+            screen.blit(play_stop, (10, 10))
         pygame.display.update()
         clock.tick(FRAMES_PER_SECOND)
 
