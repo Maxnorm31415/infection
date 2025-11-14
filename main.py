@@ -32,6 +32,8 @@ diagrams_view = False
 
 aircraft_left = pygame.image.load("images/airplane_left.png")
 aircraft_right = pygame.image.load("images/airplane_right.png")
+frame = pygame.image.load("images/frame.png")
+accept = pygame.image.load("images/accept.png")
 
 #For travel:
 travel = False
@@ -44,14 +46,21 @@ counter = 0
 flight_time = 0
 
 #For diagrams:
-color_healthy = (0,0,255)
-color_infected = (255,0,0)
-color_deaths = (0,0,0)
+main_graph = pygame.image.load("images/main_graph.png")
 diagram = {
-    'healthy':[],
-    'infected':[],
-    'death':[]
+    'healthy':{"list":[], "color": (98, 12, 237)},
+    'infected':{"list":[], "color": (255, 0, 0)},
+    'deaths':{"list":[], "color": (0,0,0)},
+    "infected_level_1": {"list":[], "color": (255, 255, 0),},
+    "infected_level_2": {"list":[], "color": (255, 153, 0),},
+    "infected_level_3": {"list":[], "color": (255, 0, 242),},
+    "immunity_level_1": {"list":[], "color": (0, 72, 255),},
+    "immunity_level_2": {"list":[], "color": (0, 195, 255),},
+    "immunity_level_3": {"list":[], "color": (0, 255, 213),},
+    "immunity_level_4": {"list":[], "color": (59, 184, 144),},
 }
+buttons = {}
+
 
 screen_width, screen_height = 1600, 821
 
@@ -97,6 +106,13 @@ def make_continents():
 def refresh_stats():
     global diagram
     healthy = 0
+    inf_lvl_1 = 0
+    inf_lvl_2 = 0
+    inf_lvl_3 = 0
+    immun_lvl_1 = 0
+    immun_lvl_2 = 0
+    immun_lvl_3 = 0
+    immun_lvl_4 = 0
     infected_people = 0
     deaths = 0
     for hum in list_humans:
@@ -104,21 +120,42 @@ def refresh_stats():
             deaths += 1
         elif not hum.infection:
             healthy += 1
+            if hum.immunity == 0:
+                immun_lvl_1 += 1
+            elif hum.immunity == 1:
+                immun_lvl_2 += 1
+            elif hum.immunity == 2:
+                immun_lvl_3 += 1
+            else:
+                immun_lvl_4 += 1
         else:
             infected_people += 1
-    diagram['healthy'].append(healthy)
-    diagram['infected'].append(infected_people)
-    diagram['death'].append(deaths)
+            if hum.virus_level == 1:
+                inf_lvl_1 += 1
+            elif hum.virus_level == 2:
+                inf_lvl_2 += 1
+            else:
+                inf_lvl_3 += 1
+    diagram['healthy']['list'].append(healthy)
+    diagram['infected']['list'].append(infected_people)
+    diagram['deaths']['list'].append(deaths)
+    diagram["infected_level_1"]['list'].append(inf_lvl_1)
+    diagram["infected_level_2"]['list'].append(inf_lvl_2)
+    diagram["infected_level_3"]['list'].append(inf_lvl_3)
+    diagram["immunity_level_1"]['list'].append(immun_lvl_1)
+    diagram["immunity_level_2"]['list'].append(immun_lvl_2)
+    diagram["immunity_level_3"]['list'].append(immun_lvl_3)
+    diagram["immunity_level_4"]['list'].append(immun_lvl_4)
 
-def make_diagrams(surface):
+def make_live_graph(surface):
     global diagram
     diagram_img = pygame.image.load("images/diagram.png")
     start_point_x = 940
     start_point_y = 689
     surface.blit(diagram_img, (start_point_x, start_point_y))
-    pygame.draw.line(surface, color_healthy, (start_point_x + 10, start_point_y + 50),(start_point_x + 50, start_point_y + 50), 3)
-    pygame.draw.line(surface, color_infected, (start_point_x + 10, start_point_y + 82),(start_point_x + 50, start_point_y + 82), 3)
-    pygame.draw.line(surface, color_deaths, (start_point_x + 10, start_point_y + 114),(start_point_x + 50, start_point_y + 114), 3)
+    pygame.draw.line(surface, diagram["healthy"]['color'], (start_point_x + 10, start_point_y + 50),(start_point_x + 50, start_point_y + 50), 3)
+    pygame.draw.line(surface, diagram["infected"]['color'], (start_point_x + 10, start_point_y + 82),(start_point_x + 50, start_point_y + 82), 3)
+    pygame.draw.line(surface, diagram["deaths"]['color'], (start_point_x + 10, start_point_y + 114),(start_point_x + 50, start_point_y + 114), 3)
     font = pygame.font.Font("fonts/font_for_numbers.otf", 20)
     max_people = total_people
     start_text_x = start_point_x + 52
@@ -151,28 +188,21 @@ def make_diagrams(surface):
         start_sec_x += step * 10
     size = 103
     #if len(diagram[dia]) != 0:
-    live_graph = ("healthy", "infected", "death")
+    live_graph = ("healthy", "infected", "deaths")
     for dia in live_graph:
-        color_line = ()
-        if dia == 'healthy':
-            color_line = color_healthy
-        elif dia == 'infected':
-            color_line = color_infected
-        else:
-            color_line = color_deaths
         start_line_x = start_point_x + 87.00
         end_line_x = start_line_x - step
-        max = len(diagram[dia])
+        max = len(diagram[dia]['list'])
         if max < 160:
             min = 0
         else:
             min = max - 160
-        start_line_y = start_point_y + 5 + size - (size * (diagram[dia][min] / total_people))
+        start_line_y = start_point_y + 5 + size - (size * (diagram[dia]['list'][min] / total_people))
         end_line_y = start_line_y
         for num in range(min,max):
             end_line_x += step
-            end_line_y = (start_point_y + 5+ size - (size * (diagram[dia][num]/total_people)))
-            pygame.draw.line(surface,color_line,(start_line_x, start_line_y),(end_line_x, end_line_y), 4)
+            end_line_y = (start_point_y + 5+ size - (size * (diagram[dia]['list'][num]/total_people)))
+            pygame.draw.line(surface,diagram[dia]['color'],(start_line_x, start_line_y),(end_line_x, end_line_y), 4)
             start_line_x = end_line_x
             start_line_y = end_line_y
 
@@ -242,6 +272,90 @@ def make_stats(surface):
         if count == 8 or count == 14:
             start_point_y += 15
         count += 1
+
+def make_buttons():
+    global buttons
+    buttons = {
+        "healthy": {"borders":[],"active": True},
+        "infected": {"borders":[],"active": True},
+        "deaths": {"borders":[],"active": True},
+        "infected_level_1": {"borders":[],"active": False},
+        "infected_level_2": {"borders":[],"active": False},
+        "infected_level_3": {"borders":[],"active": False},
+        "immunity_level_1": {"borders":[],"active": False},
+        "immunity_level_2": {"borders":[],"active": False},
+        "immunity_level_3": {"borders":[],"active": False},
+        "immunity_level_4": {"borders":[],"active": False},
+    }
+    start_point_x = 300
+    start_point_y = 60
+    for butts in buttons:
+        buttons[butts]["borders"] = [start_point_x,start_point_x + frame.get_width(), start_point_y, start_point_y + frame.get_height()]
+        start_point_y += frame.get_height() + 10
+
+def make_main_graph(surface):
+    global buttons
+    font_buttons = pygame.font.Font("fonts/font_for_button.otf", 35)
+    start_text_x = buttons["healthy"]["borders"][1] + 20
+    for butts in buttons:
+        text = font_buttons.render(butts, True, diagram[butts]["color"])
+        start_text_y = buttons[butts]["borders"][2] + frame.get_height() / 2 - text.get_height()/2
+        surface.blit(frame, (buttons[butts]["borders"][0], buttons[butts]["borders"][2]))
+        if buttons[butts]["active"]:
+            surface.blit(accept, (buttons[butts]["borders"][0], buttons[butts]["borders"][2]))
+        surface.blit(text, (start_text_x, start_text_y))
+    start_graph_x = start_text_x + 280
+    start_graph_y = buttons["healthy"]["borders"][2] + frame.get_height() / 2 + 20
+    surface.blit(main_graph, (start_graph_x, start_graph_y))
+    cells = 11
+    cell_width = 55
+    max_people = total_people
+    start_num_x = start_graph_x - 40
+    start_num_y = start_graph_y - 12
+    font_nums = pygame.font.Font("fonts/font_for_button.otf", 24)
+    for i in range(cells + 1):
+        if i == cells:
+            max_people = 0
+        num = font_nums.render(str(max_people), True, WHITE)
+        if num.get_width() < 44:
+            start_num_x += 44 - num.get_width()
+        surface.blit(num, (start_num_x, start_num_y))
+        max_people -= int(total_people/cells)
+        start_num_x = start_graph_x - 40
+        start_num_y += cell_width
+    point = int(ticked/100)
+    min = 0
+    max = point
+    if point < 15:
+        min = 0
+    else:
+        min = point - 15
+    start_num_x = start_graph_x + 12
+    start_num_y = start_graph_y + main_graph.get_height()
+    for i in range(min,max+1):
+        num = font_nums.render(str(i*10), True, WHITE)
+        surface.blit(num, (start_num_x, start_num_y))
+        start_num_x += cell_width
+    graph_width = 608
+    for dia in diagram:
+        if not buttons[dia]["active"]:
+            continue
+        start_line_x = start_graph_x + 20
+        end_line_x = start_line_x
+        start_line_y = start_graph_y + (graph_width - (graph_width * diagram[dia]['list'][0]/total_people))
+        if len(diagram[dia]['list']) < 100*15:
+            min = 0
+        else:
+            min = len(diagram[dia]['list']) - 100*15
+            start_line_y = start_graph_y + (graph_width - (graph_width * diagram[dia]['list'][min] / total_people))
+        end_line_y = start_line_y
+        for num in range(min, len(diagram[dia]['list'])):
+            pygame.draw.line(surface, diagram[dia]['color'], (start_line_x, start_line_y), (end_line_x, end_line_y), 5)
+            start_line_x = end_line_x
+            start_line_y = end_line_y
+            end_line_x += cell_width/100
+            end_line_y = start_graph_y + (graph_width - (graph_width * diagram[dia]['list'][num]/total_people))
+
 def check_spawn(x,y,num,board):
     if board.get_at((x,y)):
         if len(list_humans) > 0:
@@ -404,7 +518,7 @@ def move_humans(boards):
     if change_virus_stage:
         change_virus_stage = False
 
-def speek():
+def speek(sound):
     global list_infected
     for i in list_infected:
         if not list_humans[i].alive:
@@ -418,16 +532,27 @@ def speek():
                 if neighbor.try_infection():
                     #print(neighbor.lastname, neighbor.firstname, "infected")
                     infected(neighbor, hum.virus_level, hum.immunity)
+                    sound.play()
 
 def main():
-    global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready, stat_view, diagrams_view
+    global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready, stat_view, diagrams_view, buttons, frame, accept, main_graph
     pygame.init()
+    #Main Window:
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
+    # Music and Sounds:
+    pygame.mixer.music.load("music/background.ogg")
+    pygame.mixer.music.set_volume(0.1)
+    sound_infected = pygame.mixer.Sound("music/sound_infected.mp3")
+    sound_infected.set_volume(0.05)
+    pygame.mixer.music.play(-1)
     mask = pygame.mask.from_surface(pygame.image.load("images/mask.png").convert_alpha())
     world = pygame.image.load("images/world.png").convert()
     aircraft_left = aircraft_right.convert_alpha()
     aircraft_right = aircraft_left.convert_alpha()
+    frame = frame.convert_alpha()
+    accept = accept.convert_alpha()
+    main_graph = main_graph.convert_alpha()
     stat_icon = pygame.image.load("images/stat.png").convert_alpha()
     stat_border = [10,110,10,110]
     diagram_border = [940, 1339, 12, 141]
@@ -461,14 +586,20 @@ def main():
                         play_stop_border = [screen_width - play_stop.get_width() - 10, screen_width - 10, 10,play_stop.get_height() + 10]
                     if check_on_mask(mouse_pos[0], mouse_pos[1], diagram_border):
                         diagrams_view = True
+                        make_buttons()
                         button_border = [screen_width - button_icon.get_width()-10, screen_width-10, 10,10 + button_icon.get_height()]
                 elif stat_view and check_on_mask(mouse_pos[0], mouse_pos[1], button_border, True):
                     stat_view = False
                     play_stop_border = [10, 10 + play_stop.get_width(), 10, 10 + play_stop.get_height()]
                 elif diagrams_view and check_on_mask(mouse_pos[0], mouse_pos[1], button_border, True):
                     diagrams_view = False
+                    buttons.clear()
                 if check_on_mask(mouse_pos[0], mouse_pos[1], play_stop_border, True):
                     pause = not pause
+                if len(buttons) != 0:
+                    for butts in buttons:
+                        if check_on_mask(mouse_pos[0], mouse_pos[1], buttons[butts]["borders"], True):
+                            buttons[butts]["active"] = not buttons[butts]["active"]
                 #if check_on_mask(mouse_pos[0],mouse_pos[1])
         if pause:
             play_stop = stop
@@ -483,7 +614,7 @@ def main():
         draw_humans(screen)
         if get_ticks():
             refresh_stats()
-        make_diagrams(screen)
+        make_live_graph(screen)
         screen.blit(stat_icon, (10, screen_height - stat_icon.get_height() - 10))
         if not pause:
             if travel:
@@ -502,7 +633,7 @@ def main():
             if (count_speed % SPEED == 0):
                # print(len(list_infected))
                 move_humans(mask)
-                speek()
+                speek(sound_infected)
                 count_speed = 0
         if stat_view:
             window_stat = (0,0,screen_width/2, screen_height)
@@ -517,6 +648,7 @@ def main():
             screen.blit(copy_surf, (0,0))
             screen.blit(button_icon, (screen_width - button_icon.get_width() - 10, 10))
             screen.blit(play_stop, (10, 10))
+            make_main_graph(screen)
         pygame.display.update()
         clock.tick(FRAMES_PER_SECOND)
 
