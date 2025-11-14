@@ -55,9 +55,13 @@ diagram = {
 
 screen_width, screen_height = 1600, 821
 
-def check_on_mask(x,y,x_min,x_max,y_min,y_max):
+def check_on_mask(x,y,border, reverse=False):
+    border_mask = [border[0],border[1],border[2],border[3]]
     y = screen_height-y
-    if x >= x_min and x <= x_max and y>=y_min and y <= y_max:
+    if reverse:
+        border_mask[2] = screen_height - border[3]
+        border_mask[3] = screen_height - border[2]
+    if x >= border_mask[0] and x <= border_mask[1] and y>=border_mask[2] and y <= border_mask[3]:
         return True
     else:
         return False
@@ -90,25 +94,27 @@ def make_continents():
     for continent in continents:
         total_people += continents[continent]["max_people"]
 
-def make_diagrams(surface, check):
+def refresh_stats():
+    global diagram
+    healthy = 0
+    infected_people = 0
+    deaths = 0
+    for hum in list_humans:
+        if not hum.alive:
+            deaths += 1
+        elif not hum.infection:
+            healthy += 1
+        else:
+            infected_people += 1
+    diagram['healthy'].append(healthy)
+    diagram['infected'].append(infected_people)
+    diagram['death'].append(deaths)
+
+def make_diagrams(surface):
     global diagram
     diagram_img = pygame.image.load("images/diagram.png")
     start_point_x = 940
     start_point_y = 689
-    if check:
-        healthy = 0
-        infected_people = 0
-        deaths = 0
-        for hum in list_humans:
-            if not hum.alive:
-               deaths += 1
-            elif not hum.infection:
-                healthy += 1
-            else:
-                infected_people += 1
-        diagram['healthy'].append(healthy)
-        diagram['infected'].append(infected_people)
-        diagram['death'].append(deaths)
     surface.blit(diagram_img, (start_point_x, start_point_y))
     pygame.draw.line(surface, color_healthy, (start_point_x + 10, start_point_y + 50),(start_point_x + 50, start_point_y + 50), 3)
     pygame.draw.line(surface, color_infected, (start_point_x + 10, start_point_y + 82),(start_point_x + 50, start_point_y + 82), 3)
@@ -145,7 +151,8 @@ def make_diagrams(surface, check):
         start_sec_x += step * 10
     size = 103
     #if len(diagram[dia]) != 0:
-    for dia in diagram:
+    live_graph = ("healthy", "infected", "death")
+    for dia in live_graph:
         color_line = ()
         if dia == 'healthy':
             color_line = color_healthy
@@ -422,10 +429,14 @@ def main():
     aircraft_left = aircraft_right.convert_alpha()
     aircraft_right = aircraft_left.convert_alpha()
     stat_icon = pygame.image.load("images/stat.png").convert_alpha()
+    stat_border = [10,110,10,110]
+    diagram_border = [940, 1339, 12, 141]
     button_icon = pygame.image.load("images/button.png").convert_alpha()
+    button_border = [0,0,0,0]
     play = pygame.image.load("images/play.png").convert_alpha()
     stop = pygame.image.load("images/pause.png").convert_alpha()
     play_stop = stop
+    play_stop_border = [10, 10 + play_stop.get_width(), 10, 10 + play_stop.get_height()]
     clock = pygame.time.Clock()
     mouse_pos = [0,0]
     make_continents()
@@ -444,22 +455,19 @@ def main():
                 mouse_pos = pygame.mouse.get_pos()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if not stat_view and not diagrams_view:
-                    if check_on_mask(mouse_pos[0], mouse_pos[1], 10, 110, 10, 110):
+                    if check_on_mask(mouse_pos[0], mouse_pos[1], stat_border):
+                        button_border = [screen_width / 2 - button_icon.get_width() - 10, screen_width / 2 - 10, 10,10 + button_icon.get_height()]
                         stat_view = True
-                    if check_on_mask(mouse_pos[0], mouse_pos[1], 940, 1339, screen_height - 809,screen_height - 680):
+                        play_stop_border = [screen_width - play_stop.get_width() - 10, screen_width - 10, 10,play_stop.get_height() + 10]
+                    if check_on_mask(mouse_pos[0], mouse_pos[1], diagram_border):
                         diagrams_view = True
-                if stat_view:
-                    if check_on_mask(mouse_pos[0], mouse_pos[1], screen_width/2-button_icon.get_width()-10, screen_width/2-10,
-                                        screen_height- (10 + button_icon.get_height()), screen_height - 10):
-                        stat_view = False
-                    if check_on_mask(mouse_pos[0], mouse_pos[1], screen_width - play_stop.get_width()-10, screen_width - 10,
-                                     screen_height - play_stop.get_height() - 10, screen_height - 10):
-                        pause = not pause
-                if diagrams_view and check_on_mask(mouse_pos[0], mouse_pos[1], screen_width - button_icon.get_width()-10, screen_width-10,
-                                                   screen_height- (10 + button_icon.get_height()), screen_height - 10):
+                        button_border = [screen_width - button_icon.get_width()-10, screen_width-10, 10,10 + button_icon.get_height()]
+                elif stat_view and check_on_mask(mouse_pos[0], mouse_pos[1], button_border, True):
+                    stat_view = False
+                    play_stop_border = [10, 10 + play_stop.get_width(), 10, 10 + play_stop.get_height()]
+                elif diagrams_view and check_on_mask(mouse_pos[0], mouse_pos[1], button_border, True):
                     diagrams_view = False
-                if not stat_view and check_on_mask(mouse_pos[0],mouse_pos[1], 10, 10 + play_stop.get_width(),
-                                                   screen_height - 10 - play_stop.get_height(), screen_height - 10):
+                if check_on_mask(mouse_pos[0], mouse_pos[1], play_stop_border, True):
                     pause = not pause
                 #if check_on_mask(mouse_pos[0],mouse_pos[1])
         if pause:
@@ -473,7 +481,9 @@ def main():
         elif not diagrams_view:
             screen.blit(play_stop, (screen_width - play_stop.get_width() - 10, 10))
         draw_humans(screen)
-        make_diagrams(screen, get_ticks())
+        if get_ticks():
+            refresh_stats()
+        make_diagrams(screen)
         screen.blit(stat_icon, (10, screen_height - stat_icon.get_height() - 10))
         if not pause:
             if travel:
