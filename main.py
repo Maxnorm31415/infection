@@ -52,14 +52,14 @@ diagram = {
     'healthy':{"list":[], "color": (98, 12, 237)},
     'infected':{"list":[], "color": (255, 0, 0)},
     'deaths':{"list":[], "color": (0,0,0)},
-    "infected_level_1": {"list":[], "color": (255, 255, 0),},
-    "infected_level_2": {"list":[], "color": (255, 153, 0),},
-    "infected_level_3": {"list":[], "color": (255, 0, 242),},
-    "last_stage": {"list":[], "color": (171, 17, 91),},
-    "immunity_level_1": {"list":[], "color": (0, 72, 255),},
-    "immunity_level_2": {"list":[], "color": (0, 195, 255),},
-    "immunity_level_3": {"list":[], "color": (0, 255, 213),},
-    "immunity_level_4": {"list":[], "color": (59, 184, 144),},
+    "infected level 1": {"list":[], "color": (255, 255, 0),},
+    "infected level 2": {"list":[], "color": (255, 153, 0),},
+    "infected level 3": {"list":[], "color": (255, 0, 242),},
+    "last stage": {"list":[], "color": (171, 17, 91),},
+    "immunity level 1": {"list":[], "color": (0, 72, 255),},
+    "immunity level 2": {"list":[], "color": (0, 195, 255),},
+    "immunity level 3": {"list":[], "color": (0, 255, 213),},
+    "immunity level 4": {"list":[], "color": (59, 184, 144),},
     "survived": {"list":[], "color": (17, 171, 27),},
 }
 buttons = {}
@@ -147,14 +147,14 @@ def refresh_stats():
     diagram['healthy']['list'].append(healthy)
     diagram['infected']['list'].append(infected_people)
     diagram['deaths']['list'].append(deaths)
-    diagram["infected_level_1"]['list'].append(inf_lvl_1)
-    diagram["infected_level_2"]['list'].append(inf_lvl_2)
-    diagram["infected_level_3"]['list'].append(inf_lvl_3)
-    diagram["last_stage"]['list'].append(inf_lvl_4)
-    diagram["immunity_level_1"]['list'].append(immun_lvl_1)
-    diagram["immunity_level_2"]['list'].append(immun_lvl_2)
-    diagram["immunity_level_3"]['list'].append(immun_lvl_3)
-    diagram["immunity_level_4"]['list'].append(immun_lvl_4)
+    diagram["infected level 1"]['list'].append(inf_lvl_1)
+    diagram["infected level 2"]['list'].append(inf_lvl_2)
+    diagram["infected level 3"]['list'].append(inf_lvl_3)
+    diagram["last stage"]['list'].append(inf_lvl_4)
+    diagram["immunity level 1"]['list'].append(immun_lvl_1)
+    diagram["immunity level 2"]['list'].append(immun_lvl_2)
+    diagram["immunity level 3"]['list'].append(immun_lvl_3)
+    diagram["immunity level 4"]['list'].append(immun_lvl_4)
     diagram["survived"]["list"].append(immun_lvl_5)
 
 def make_live_graph(surface):
@@ -293,17 +293,17 @@ def make_buttons():
         "healthy": {"borders":[],"active": True},
         "infected": {"borders":[],"active": True},
         "deaths": {"borders":[],"active": True},
-        "infected_level_1": {"borders":[],"active": False},
-        "infected_level_2": {"borders":[],"active": False},
-        "infected_level_3": {"borders":[],"active": False},
-        "last_stage": {"borders":[],"active": False},
-        "immunity_level_1": {"borders":[],"active": False},
-        "immunity_level_2": {"borders":[],"active": False},
-        "immunity_level_3": {"borders":[],"active": False},
-        "immunity_level_4": {"borders":[],"active": False},
+        "infected level 1": {"borders":[],"active": False},
+        "infected level 2": {"borders":[],"active": False},
+        "infected level 3": {"borders":[],"active": False},
+        "last stage": {"borders":[],"active": False},
+        "immunity level 1": {"borders":[],"active": False},
+        "immunity level 2": {"borders":[],"active": False},
+        "immunity level 3": {"borders":[],"active": False},
+        "immunity level 4": {"borders":[],"active": False},
         "survived": {"borders":[],"active": False},
     }
-    start_point_x = 300
+    start_point_x = 250
     start_point_y = 20
     for butts in buttons:
         buttons[butts]["borders"] = [start_point_x,start_point_x + frame.get_width(), start_point_y, start_point_y + frame.get_height()]
@@ -430,6 +430,34 @@ def flying(surface):
         flight_time += 1
         travel = False
         travel_ready = False
+
+def draw_colors(surface):
+    colors = {
+        "inf lvl 1": (176, 0, 0),
+        "inf lvl 2": (255, 0, 127),
+        "inf lvl 3": (255, 183, 0),
+        "last stage": (166, 0, 255),
+        "immun lvl 1": (14, 112, 7),
+        "immun lvl 2": (0, 0, 255),
+        "immun lvl 3": (0, 255, 213),
+        "immun lvl 4": (48, 18, 196),
+        "survived": (81, 126, 173),
+        "dead": (0, 0, 0)
+    }
+    small_surf = pygame.Surface((100, 300), pygame.SRCALPHA)
+    window_colors = (0, 0, 100, 300)
+    pygame.draw.rect(small_surf, GRAY, window_colors)
+    small_surf.set_alpha(150)
+    surface.blit(small_surf, (10, 400))
+    radius = 9
+    start_color_x = 15 + radius
+    start_color_y = 415 + radius
+    font_text = pygame.font.Font("fonts/font_for_button.otf", 15)
+    for col in colors:
+        pygame.draw.circle(surface, colors[col], (start_color_x, start_color_y), radius)
+        text_color = font_text.render("- " + col, True, WHITE)
+        surface.blit(text_color, (start_color_x + radius + 5, start_color_y - text_color.get_height()/2))
+        start_color_y += 2 * radius + 10
 
 def found_neighbors(x,y,cont):
     list_neighbors = []
@@ -638,6 +666,8 @@ def main():
         screen.blit(stat_icon, (10, screen_height - stat_icon.get_height() - 10))
         draw_humans(screen)
         # =======================================================================================
+        if not stat_view:
+            draw_colors(screen)
         if get_ticks():
             refresh_stats()
         make_live_graph(screen)
