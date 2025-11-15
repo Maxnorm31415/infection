@@ -11,7 +11,7 @@ WHITE = (225, 225, 225)
 BLACK = (0, 0, 0)
 GRAY = (39, 41, 37)
 
-total_people = 600 #min 120
+total_people = 603 #min 120
 steps = 3
 radius_speek = 4
 ticked = 1
@@ -20,8 +20,8 @@ continents = {}
 list_humans = []
 list_infected = []
 FRAMES_PER_SECOND = 60
-SPEED = 1
-virus_stage_time = 3500
+SPEED = 1 #milliseconds
+virus_stage_time = 3500 #milliseconds
 time_for_travel = 300
 
 change_virus_stage = False
@@ -55,10 +55,12 @@ diagram = {
     "infected_level_1": {"list":[], "color": (255, 255, 0),},
     "infected_level_2": {"list":[], "color": (255, 153, 0),},
     "infected_level_3": {"list":[], "color": (255, 0, 242),},
+    "last_stage": {"list":[], "color": (171, 17, 91),},
     "immunity_level_1": {"list":[], "color": (0, 72, 255),},
     "immunity_level_2": {"list":[], "color": (0, 195, 255),},
     "immunity_level_3": {"list":[], "color": (0, 255, 213),},
     "immunity_level_4": {"list":[], "color": (59, 184, 144),},
+    "survived": {"list":[], "color": (17, 171, 27),},
 }
 buttons = {}
 
@@ -109,10 +111,12 @@ def refresh_stats():
     inf_lvl_1 = 0
     inf_lvl_2 = 0
     inf_lvl_3 = 0
+    inf_lvl_4 = 0
     immun_lvl_1 = 0
     immun_lvl_2 = 0
     immun_lvl_3 = 0
     immun_lvl_4 = 0
+    immun_lvl_5 = 0
     infected_people = 0
     deaths = 0
     for hum in list_humans:
@@ -126,26 +130,32 @@ def refresh_stats():
                 immun_lvl_2 += 1
             elif hum.immunity == 2:
                 immun_lvl_3 += 1
-            else:
+            elif hum.immunity == 3:
                 immun_lvl_4 += 1
+            else:
+                immun_lvl_5 += 1
         else:
             infected_people += 1
             if hum.virus_level == 1:
                 inf_lvl_1 += 1
             elif hum.virus_level == 2:
                 inf_lvl_2 += 1
-            else:
+            elif hum.virus_level == 3:
                 inf_lvl_3 += 1
+            else:
+                inf_lvl_4 += 1
     diagram['healthy']['list'].append(healthy)
     diagram['infected']['list'].append(infected_people)
     diagram['deaths']['list'].append(deaths)
     diagram["infected_level_1"]['list'].append(inf_lvl_1)
     diagram["infected_level_2"]['list'].append(inf_lvl_2)
     diagram["infected_level_3"]['list'].append(inf_lvl_3)
+    diagram["last_stage"]['list'].append(inf_lvl_4)
     diagram["immunity_level_1"]['list'].append(immun_lvl_1)
     diagram["immunity_level_2"]['list'].append(immun_lvl_2)
     diagram["immunity_level_3"]['list'].append(immun_lvl_3)
     diagram["immunity_level_4"]['list'].append(immun_lvl_4)
+    diagram["survived"]["list"].append(immun_lvl_5)
 
 def make_live_graph(surface):
     global diagram
@@ -213,6 +223,7 @@ def make_stats(surface):
     virus_level_1 = 0
     virus_level_2 = 0
     virus_level_3 = 0
+    virus_level_4 = 0
     index = 0
     continents_infected = {
         "south_america": 0,
@@ -236,8 +247,10 @@ def make_stats(surface):
                     virus_level_1 += 1
                 elif hum.virus_level == 2:
                     virus_level_2 += 1
-                else:
+                elif hum.virus_level == 3:
                     virus_level_3 += 1
+                else:
+                    virus_level_4 += 1
         index += continents[con]["max_people"]
     sentence = {
         "Total People:": total_people,
@@ -247,6 +260,7 @@ def make_stats(surface):
         "People infected with the first stage:": virus_level_1,
         "People infected with the second stage:": virus_level_2,
         "People infected with the third stage:": virus_level_3,
+        "People infected with the last stage:": virus_level_4,
         "Number of flights": flight_time,
         "Number of people in South America:": continents["south_america"]["max_people"],
         "Number of people in North America:": continents["north_america"]["max_people"],
@@ -263,7 +277,7 @@ def make_stats(surface):
     }
     font = pygame.font.Font("fonts/font_for_game.ttf", 38)
     start_point_x = 100
-    start_point_y = 35
+    start_point_y = 15
     count = 1
     for sent in sentence:
         text = font.render(sent + " " + str(sentence[sent]), True, WHITE)
@@ -282,13 +296,15 @@ def make_buttons():
         "infected_level_1": {"borders":[],"active": False},
         "infected_level_2": {"borders":[],"active": False},
         "infected_level_3": {"borders":[],"active": False},
+        "last_stage": {"borders":[],"active": False},
         "immunity_level_1": {"borders":[],"active": False},
         "immunity_level_2": {"borders":[],"active": False},
         "immunity_level_3": {"borders":[],"active": False},
         "immunity_level_4": {"borders":[],"active": False},
+        "survived": {"borders":[],"active": False},
     }
     start_point_x = 300
-    start_point_y = 60
+    start_point_y = 20
     for butts in buttons:
         buttons[butts]["borders"] = [start_point_x,start_point_x + frame.get_width(), start_point_y, start_point_y + frame.get_height()]
         start_point_y += frame.get_height() + 10
@@ -305,7 +321,7 @@ def make_main_graph(surface):
             surface.blit(accept, (buttons[butts]["borders"][0], buttons[butts]["borders"][2]))
         surface.blit(text, (start_text_x, start_text_y))
     start_graph_x = start_text_x + 280
-    start_graph_y = buttons["healthy"]["borders"][2] + frame.get_height() / 2 + 20
+    start_graph_y = buttons["infected"]["borders"][2]
     surface.blit(main_graph, (start_graph_x, start_graph_y))
     cells = 11
     cell_width = 55
@@ -506,7 +522,10 @@ def move_humans(boards):
                 hum.pos_y = y
                 finish = True
         if hum.infection and change_virus_stage:
-            hum.virus_live -= 1
+            if hum.virus_level < 4:
+                hum.virus_live -= 1
+            else:
+                hum.try_heal()
             hum.update()
             if hum.virus_live == 0:
                 list_humans[hum.id] = Human(hum.id,hum.pos_x, hum.pos_y,hum.continent, False,hum.firstname,

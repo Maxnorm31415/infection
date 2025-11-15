@@ -6,8 +6,10 @@ PINK = (255,0,127)
 ORANGE = (255, 183, 0)
 BLACK = (0, 0, 0)
 BLUE = (0, 0, 255)
-PURPLE = (166, 0, 255)
 LIGHTBLUE = (0, 255, 213)
+DARK_BLUE = (48, 18, 196)
+GRAY_BLUE = (81, 126, 173)
+PURPLE = (166, 0, 255)
 
 class Human:
     id = 0
@@ -48,8 +50,10 @@ class Human:
                 self.color = BLUE
             elif self.immunity == 2:
                 self.color = LIGHTBLUE
+            elif self.immunity == 3:
+                self.color = DARK_BLUE
             else:
-                self.color = PURPLE
+                self.color = GRAY_BLUE
 
         self.id = id
         self.continent = cont
@@ -73,8 +77,10 @@ class Infected(Human):
             self.color = RED
         elif self.virus_level == 2:
             self.color = PINK
-        else:
+        elif self.virus_level == 3:
             self.color = ORANGE
+        else:
+            self.color = PURPLE
         self.die_chance = (self.virus_live - 1) * 0.0015
 
     def try_travel(self):
@@ -94,13 +100,24 @@ class Infected(Human):
                 if random.uniform(0,1) < self.die_chance:
                     self.alive = False
                     self.color = BLACK
-            if self.streak == 17 and self.virus_level < 3:
+            if self.streak == 17 and self.virus_level < 4:
                 self.virus_level += 1
-                self.die_chance = (self.virus_level - 1) * 0.0015
-                self.virus_live += random.randint(5,20)
+                if self.virus_level != 4:
+                    self.die_chance = (self.virus_level - 1) * 0.0015
+                    self.virus_live += random.randint(5,20)
+                else:
+                    self.die_chance = 0.05
+                    self.virus_live = 10
                 self.immunity += 1
                 self.streak = 0
                 if self.virus_level == 2:
                     self.color = PINK
-                else:
+                elif self.virus_level == 3:
                     self.color = ORANGE
+                else:
+                    self.color = PURPLE
+
+    def try_heal(self):
+        chance = -0.004*self.age + 0.36
+        if random.uniform(0,1) < chance:
+            self.virus_live -= 1
