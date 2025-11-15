@@ -49,7 +49,7 @@ flight_time = 0
 #For diagrams:
 main_graph = pygame.image.load("images/main_graph.png")
 diagram = {
-    'healthy':{"list":[], "color": (98, 12, 237)},
+    'healthy':{"list":[], "color": (17, 171, 27)},
     'infected':{"list":[], "color": (255, 0, 0)},
     'deaths':{"list":[], "color": (0,0,0)},
     "infected level 1": {"list":[], "color": (255, 255, 0),},
@@ -60,7 +60,7 @@ diagram = {
     "immunity level 2": {"list":[], "color": (0, 195, 255),},
     "immunity level 3": {"list":[], "color": (0, 255, 213),},
     "immunity level 4": {"list":[], "color": (59, 184, 144),},
-    "survived": {"list":[], "color": (17, 171, 27),},
+    "survived": {"list":[], "color": (81, 126, 173),},
 }
 buttons = {}
 
