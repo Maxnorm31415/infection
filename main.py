@@ -21,8 +21,8 @@ list_humans = []
 list_infected = []
 FRAMES_PER_SECOND = 60
 SPEED = 1
-virus_stage = 200
-time_for_travel = 200
+virus_stage_time = 3500
+time_for_travel = 300
 
 change_virus_stage = False
 travel_ready = False
@@ -30,6 +30,7 @@ pause = False
 stat_view = False
 diagrams_view = False
 
+#images
 aircraft_left = pygame.image.load("images/airplane_left.png")
 aircraft_right = pygame.image.load("images/airplane_right.png")
 frame = pygame.image.load("images/frame.png")
@@ -60,7 +61,6 @@ diagram = {
     "immunity_level_4": {"list":[], "color": (59, 184, 144),},
 }
 buttons = {}
-
 
 screen_width, screen_height = 1600, 821
 
@@ -97,7 +97,7 @@ def make_continents():
         "eurasia":        {"bounds": (785,39,1447,268), "max_people": 20 + int(total_people * 0.657),"airport":(1034,235)},
         "africa":         {"bounds": (636,306,988,710), "max_people": 20 + int(total_people * 0.191),"airport":(722,330)},
         "australia":      {"bounds": (1370,587,1589,737), "max_people": 20 + int(total_people * 0.007),"airport":(1450,660)},
-        "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "airport":(620,35),},
+        "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "airport":(590,35),},
     }
     total_people = 0
     for continent in continents:
@@ -492,7 +492,7 @@ def make_travel(hum):
 
 
 def move_humans(boards):
-    global change_virus_stage
+    global change_virus_stage,travel_ready
     for hum in list_humans:
         if not hum.alive:
             continue
@@ -514,7 +514,8 @@ def move_humans(boards):
                 list_infected.remove(hum.id)
         if hum.infection and not travel and travel_ready:
             make_travel(hum)
-
+    if not travel:
+        travel_ready = False
     if change_virus_stage:
         change_virus_stage = False
 
@@ -536,41 +537,48 @@ def speek(sound):
 
 def main():
     global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready, stat_view, diagrams_view, buttons, frame, accept, main_graph
-    pygame.init()
     #Main Window:
+    pygame.init()
     screen = pygame.display.set_mode((screen_width,screen_height))
     pygame.display.set_caption("Human Infection")
-    # Music and Sounds:
+    # =======================================================================================
+    #Music and sounds:
     pygame.mixer.music.load("music/background.ogg")
     pygame.mixer.music.set_volume(0.1)
     sound_infected = pygame.mixer.Sound("music/sound_infected.mp3")
     sound_infected.set_volume(0.05)
     pygame.mixer.music.play(-1)
+    # =======================================================================================
+    #images:
     mask = pygame.mask.from_surface(pygame.image.load("images/mask.png").convert_alpha())
     world = pygame.image.load("images/world.png").convert()
+    stat_icon = pygame.image.load("images/stat.png").convert_alpha()
+    button_icon = pygame.image.load("images/button.png").convert_alpha()
+    play = pygame.image.load("images/play.png").convert_alpha()
+    stop = pygame.image.load("images/pause.png").convert_alpha()
+    play_stop = stop
     aircraft_left = aircraft_right.convert_alpha()
     aircraft_right = aircraft_left.convert_alpha()
     frame = frame.convert_alpha()
     accept = accept.convert_alpha()
     main_graph = main_graph.convert_alpha()
-    stat_icon = pygame.image.load("images/stat.png").convert_alpha()
+    # =======================================================================================
+    #Borders:
     stat_border = [10,110,10,110]
     diagram_border = [940, 1339, 12, 141]
-    button_icon = pygame.image.load("images/button.png").convert_alpha()
     button_border = [0,0,0,0]
-    play = pygame.image.load("images/play.png").convert_alpha()
-    stop = pygame.image.load("images/pause.png").convert_alpha()
-    play_stop = stop
     play_stop_border = [10, 10 + play_stop.get_width(), 10, 10 + play_stop.get_height()]
+    # =======================================================================================
     clock = pygame.time.Clock()
     mouse_pos = [0,0]
     make_continents()
     make_humans(mask)
     infected(random.choice(list_humans),1,0)
-    count_speed = 0
-    count_virus = 0
+    count_speed = 1
+    count_virus = 1
     count_travel = 0
     while True:
+        ticks = pygame.time.get_ticks()
         # event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -600,41 +608,35 @@ def main():
                     for butts in buttons:
                         if check_on_mask(mouse_pos[0], mouse_pos[1], buttons[butts]["borders"], True):
                             buttons[butts]["active"] = not buttons[butts]["active"]
-                #if check_on_mask(mouse_pos[0],mouse_pos[1])
         if pause:
             play_stop = stop
         else:
             play_stop = play
+        #Draw some objects:
         screen.fill(BLACK)
         screen.blit(world, (0, 0))
-        if not stat_view and not diagrams_view:
-            screen.blit(play_stop, (10, 10))
-        elif not diagrams_view:
-            screen.blit(play_stop, (screen_width - play_stop.get_width() - 10, 10))
+        screen.blit(play_stop, (play_stop_border[0], play_stop_border[2]))
+        screen.blit(stat_icon, (10, screen_height - stat_icon.get_height() - 10))
         draw_humans(screen)
+        # =======================================================================================
         if get_ticks():
             refresh_stats()
         make_live_graph(screen)
-        screen.blit(stat_icon, (10, screen_height - stat_icon.get_height() - 10))
         if not pause:
             if travel:
                 flying(screen)
-            count_speed += 1
-            if count_virus == virus_stage:
+            if ticks/count_virus >= virus_stage_time:
                 change_virus_stage = True
-                count_virus = 0
-            else:
                 count_virus += 1
             if not travel_ready:
                 count_travel += 1
                 if count_travel == time_for_travel:
                     travel_ready = True
                     count_travel = 0
-            if (count_speed % SPEED == 0):
-               # print(len(list_infected))
+            if ticks / count_speed >= SPEED:
                 move_humans(mask)
                 speek(sound_infected)
-                count_speed = 0
+                count_speed += 1
         if stat_view:
             window_stat = (0,0,screen_width/2, screen_height)
             pygame.draw.rect(screen,GRAY,window_stat)
