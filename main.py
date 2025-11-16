@@ -1,53 +1,56 @@
-from itertools import count
-from warnings import catch_warnings
-
 import pygame, random, math
-import numpy as np
-from pygame import MOUSEMOTION
 
+from pygame import MOUSEMOTION
 from person import Human, Infected
 
+# Colors for the screen and text
 WHITE = (225, 225, 225)
 BLACK = (0, 0, 0)
 GRAY = (39, 41, 37)
 
+# game settings
 total_people = 603 #min 120
-steps = 3
-radius_speek = 4
-ticked = 1
-
-continents = {}
-list_humans = []
-list_infected = []
+steps = 3 # number of pixels for people movement
+radius_speak = 4 # radius in pixels for people’s attempt to talk
 FRAMES_PER_SECOND = 60
-SPEED = 1 #milliseconds
-virus_stage_time = 3500 #milliseconds
-time_for_travel = 300
+SPEED = 1 # milliseconds for people movement
+virus_stage_time = 3500 # milliseconds for one “life” of the virus
+time_for_travel = 300 # time until the next travel
+screen_width, screen_height = 1600, 821
+ticked = 1  # counter for every 100 milliseconds
 
-change_virus_stage = False
-travel_ready = False
-pause = False
-stat_view = False
-diagrams_view = False
+# lists for general information
+continents = {} # information about the continents
+list_humans = [] # list of all people
+list_infected = [] # list of infected indices
+
+# booleans:
+change_virus_stage = False  # checks when the virus life should be decreased
+travel_ready = False # checks when travel is ready
+pause = False # checks when the game is paused
+stat_view = False # checks when the statistics window is open
+diagrams_view = False # checks when the overall diagram window is open
 
 #images
-aircraft_left = pygame.image.load("images/airplane_left.png")
-aircraft_right = pygame.image.load("images/airplane_right.png")
-frame = pygame.image.load("images/frame.png")
-accept = pygame.image.load("images/accept.png")
+aircraft_left = pygame.image.load("images/airplane_left.png") # airplane facing left
+aircraft_right = pygame.image.load("images/airplane_right.png") # airplane facing right
+frame = pygame.image.load("images/frame.png") # frame for buttons
+accept = pygame.image.load("images/accept.png") # checkmark when the button is active
 
 #For travel:
-travel = False
-passenger = Human(0,0,0,"none")
-aircraft = aircraft_left
-aircraft_pos = [0,0]
-vector = [0,0]
-continent_new = ""
-counter = 0
-flight_time = 0
+travel = False # checks if travel is in progress
+passenger = Human(0,0,0,"none") # passenger (default is NONE)
+aircraft = aircraft_left # airplane (default facing left)
+aircraft_pos = [0,0] # airplane position
+vector = [0,0] # vector indicating the airplane's flight direction
+continent_new = "" # continent the airplane is flying to
+counter = 0 # counter for how long the airplane has been flying (up to 100)
+flight_time = 0  # counter for the total number of flights
 
 #For diagrams:
-main_graph = pygame.image.load("images/main_graph.png")
+main_graph = pygame.image.load("images/main_graph.png") # grid of the overall diagram
+# diagram information (data for each type of person and the colors of the diagram lines);
+# here you can change the line colors:
 diagram = {
     'healthy':{"list":[], "color": (17, 171, 27)},
     'infected':{"list":[], "color": (255, 0, 0)},
@@ -62,10 +65,11 @@ diagram = {
     "immunity level 4": {"list":[], "color": (59, 184, 144),},
     "survived": {"list":[], "color": (81, 126, 173),},
 }
-buttons = {}
+buttons = {} # information about the buttons (their positions and whether they are active)
 
-screen_width, screen_height = 1600, 821
 
+# checks when x, y (mouse position) is located on the border object;
+# reverse is needed if the object is located below:
 def check_on_mask(x,y,border, reverse=False):
     border_mask = [border[0],border[1],border[2],border[3]]
     y = screen_height-y
@@ -77,6 +81,7 @@ def check_on_mask(x,y,border, reverse=False):
     else:
         return False
 
+# adds one to ticked when 100 milliseconds have passed
 def get_ticks():
     global ticked
     tick = pygame.time.get_ticks()
@@ -86,6 +91,8 @@ def get_ticks():
     else:
         return False
 
+# creates information about the continents;
+# here you can configure how many people will be on each continent,its borders, and the position of the airport
 def make_continents():
     global continents, total_people
     total_people -= 120 #min 20 peoples on 1 continent
@@ -102,9 +109,11 @@ def make_continents():
         "greenland":      {"bounds": (525,5,676,88), "max_people": 20 + int(total_people * 0.001), "airport":(590,35),},
     }
     total_people = 0
+    # since the continents cannot have a non-integer number of people, a recalculation is needed:
     for continent in continents:
         total_people += continents[continent]["max_people"]
 
+# updates the statistics for each type of person every 100 milliseconds:
 def refresh_stats():
     global diagram
     healthy = 0
@@ -144,6 +153,7 @@ def refresh_stats():
                 inf_lvl_3 += 1
             else:
                 inf_lvl_4 += 1
+    # update the information in the diagram lists:
     diagram['healthy']['list'].append(healthy)
     diagram['infected']['list'].append(infected_people)
     diagram['deaths']['list'].append(deaths)
@@ -157,15 +167,19 @@ def refresh_stats():
     diagram["immunity level 4"]['list'].append(immun_lvl_4)
     diagram["survived"]["list"].append(immun_lvl_5)
 
+# draws a live graph that shows the number of healthy, infected, and dead people:
 def make_live_graph(surface):
     global diagram
-    diagram_img = pygame.image.load("images/diagram.png")
+    diagram_img = pygame.image.load("images/diagram.png") # small graph
+    # starting position for the graph:
     start_point_x = 940
     start_point_y = 689
     surface.blit(diagram_img, (start_point_x, start_point_y))
+    # information about the line colors:
     pygame.draw.line(surface, diagram["healthy"]['color'], (start_point_x + 10, start_point_y + 50),(start_point_x + 50, start_point_y + 50), 3)
     pygame.draw.line(surface, diagram["infected"]['color'], (start_point_x + 10, start_point_y + 82),(start_point_x + 50, start_point_y + 82), 3)
     pygame.draw.line(surface, diagram["deaths"]['color'], (start_point_x + 10, start_point_y + 114),(start_point_x + 50, start_point_y + 114), 3)
+    # draws the values for the y-axis line:
     font = pygame.font.Font("fonts/font_for_numbers.otf", 20)
     max_people = total_people
     start_text_x = start_point_x + 52
@@ -181,11 +195,12 @@ def make_live_graph(surface):
         if i == 4: max_people = 0
         else:
             max_people -= int(total_people/5)
+    # draws the values for the x-axis line:
     seconds = int(ticked/10)
     font_sec = pygame.font.Font("fonts/font_for_numbers.otf", 16)
     min = 0
     max = 0
-    step = 19 / 10
+    step = 19 / 10 # size of one square side in the graph
     start_sec_x = start_point_x + 85
     start_sec_y = start_point_y + 108
     if seconds < 15:
@@ -196,8 +211,8 @@ def make_live_graph(surface):
         text_sec = font_sec.render(str(sec), True, BLACK)
         surface.blit(text_sec, (start_sec_x, start_sec_y))
         start_sec_x += step * 10
-    size = 103
-    #if len(diagram[dia]) != 0:
+    # draw the graph lines:
+    size = 103 # height of the y-axis line
     live_graph = ("healthy", "infected", "deaths")
     for dia in live_graph:
         start_line_x = start_point_x + 87.00
@@ -216,6 +231,8 @@ def make_live_graph(surface):
             start_line_x = end_line_x
             start_line_y = end_line_y
 
+# create general information about the world;
+# here you can modify or add more information:
 def make_stats(surface):
     healthy = 0
     infected_people = 0
@@ -233,6 +250,7 @@ def make_stats(surface):
         "australia": 0,
         "greenland": 0,
     }
+    # checks each type of people on each continent:
     for con in continents:
         for i in range(index, index + continents[con]["max_people"]):
             hum = list_humans[i]
@@ -275,6 +293,7 @@ def make_stats(surface):
         "Infected people in Australia:": continents_infected["australia"],
         "Infected people in Greenland:": continents_infected["greenland"],
     }
+    # creates the information text:
     font = pygame.font.Font("fonts/font_for_game.ttf", 38)
     start_point_x = 100
     start_point_y = 15
@@ -287,6 +306,8 @@ def make_stats(surface):
             start_point_y += 15
         count += 1
 
+# creates buttons if the overall diagram window is open;
+# here you can change which buttons are enabled by default:
 def make_buttons():
     global buttons
     buttons = {
@@ -303,14 +324,17 @@ def make_buttons():
         "immunity level 4": {"borders":[],"active": False},
         "survived": {"borders":[],"active": False},
     }
+    # sets the button boundaries:
     start_point_x = 250
     start_point_y = 20
     for butts in buttons:
         buttons[butts]["borders"] = [start_point_x,start_point_x + frame.get_width(), start_point_y, start_point_y + frame.get_height()]
         start_point_y += frame.get_height() + 10
 
+# creates the overall diagram window:
 def make_main_graph(surface):
     global buttons
+    # draws the buttons and checkmarks if they are active and also the text describing what this button does:
     font_buttons = pygame.font.Font("fonts/font_for_button.otf", 35)
     start_text_x = buttons["healthy"]["borders"][1] + 20
     for butts in buttons:
@@ -320,11 +344,13 @@ def make_main_graph(surface):
         if buttons[butts]["active"]:
             surface.blit(accept, (buttons[butts]["borders"][0], buttons[butts]["borders"][2]))
         surface.blit(text, (start_text_x, start_text_y))
+    # draws the graph grid:
     start_graph_x = start_text_x + 280
     start_graph_y = buttons["infected"]["borders"][2]
     surface.blit(main_graph, (start_graph_x, start_graph_y))
-    cells = 11
-    cell_width = 55
+    # draws the values of the y-axis:
+    cells = 11 # number of squares on the y-axis
+    cell_width = 55 # size of the square side
     max_people = total_people
     start_num_x = start_graph_x - 40
     start_num_y = start_graph_y - 12
@@ -339,6 +365,7 @@ def make_main_graph(surface):
         max_people -= int(total_people/cells)
         start_num_x = start_graph_x - 40
         start_num_y += cell_width
+    # draws the values for the x-axis:
     point = int(ticked/100)
     min = 0
     max = point
@@ -352,7 +379,8 @@ def make_main_graph(surface):
         num = font_nums.render(str(i*10), True, WHITE)
         surface.blit(num, (start_num_x, start_num_y))
         start_num_x += cell_width
-    graph_width = 608
+    # draws the graph lines if they are enabled:
+    graph_width = 608 # length of the x-axis starting from 0
     for dia in diagram:
         if not buttons[dia]["active"]:
             continue
@@ -372,6 +400,7 @@ def make_main_graph(surface):
             end_line_x += cell_width/100
             end_line_y = start_graph_y + (graph_width - (graph_width * diagram[dia]['list'][num]/total_people))
 
+# checks whether the point (x, y) can spawn on the map:
 def check_spawn(x,y,num,board):
     if board.get_at((x,y)):
         if len(list_humans) > 0:
@@ -381,28 +410,32 @@ def check_spawn(x,y,num,board):
         return True
     else: return False
 
-
-def check_movement(x,y,board,cont):
+# checks whether a person can move to the point (x, y):
+def check_movement(x,y,board):
     if x > screen_width or x < 0 or y > screen_height or y < 0:
         return False
     if board.get_at((x,y)):
         return True
     else: return False
 
+# infects a person:
 def infected(hum,v_lvl,immun):
     global list_infected, list_humans
     index = hum.id
     list_infected.append(index)
     list_humans[index] = Infected(hum,v_lvl,immun)
 
+# draws the airplane and updates its information:
 def flying(surface):
     global aircraft_pos, flight_time,counter, travel, list_humans,list_infected, travel_ready
+    # checks whether the flight has ended:
     if counter != 100:
         surface.blit(aircraft, (aircraft_pos[0] + 36, aircraft_pos[1] - 25))
         aircraft_pos[0] += vector[0]/100
         aircraft_pos[1] += vector[1]/100
         counter += 1
     else:
+        # if the flight has ended, moves the passenger to the continent and updates information about the passenger and the infected
         min = 0
         max = 0
         for con in continents:
@@ -411,7 +444,6 @@ def flying(surface):
                 break
             else:
                 min += continents[con]["max_people"]
-        #print(max-1, continent_new)
         passenger.pos_x = continents[continent_new]["airport"][0]
         passenger.pos_y = continents[continent_new]["airport"][1]
         passenger.continent = continent_new
@@ -424,13 +456,12 @@ def flying(surface):
                 list_infected.append(list_humans[i].id+1)
             list_humans[i].id += 1
         continents[continent_new]["max_people"] += 1
-        #for hu in list_humans:
-            #print(hu.id, hu.continent)
         counter = 0
         flight_time += 1
         travel = False
         travel_ready = False
 
+# draws information about the color of each type of people:
 def draw_colors(surface):
     colors = {
         "inf lvl 1": (176, 0, 0),
@@ -459,8 +490,10 @@ def draw_colors(surface):
         surface.blit(text_color, (start_color_x + radius + 5, start_color_y - text_color.get_height()/2))
         start_color_y += 2 * radius + 10
 
+# finds all neighbors around the point (x, y) within radius_speak:
 def found_neighbors(x,y,cont):
     list_neighbors = []
+    # finds the indices of people on the continent(cont):
     min = 0
     max = continents["south_america"]["max_people"]
     for con in continents:
@@ -469,13 +502,15 @@ def found_neighbors(x,y,cont):
             break
         else:
             min += continents[con]["max_people"]
+    # finds non-infected neighbors:
     for i in range(min, max):
         if list_humans[i].infection:
             continue
-        elif (((list_humans[i].pos_x) - x)**2) + (((list_humans[i].pos_y) - y)**2) <= radius_speek**2:
+        elif (((list_humans[i].pos_x) - x)**2) + (((list_humans[i].pos_y) - y)**2) <= radius_speak**2:
             list_neighbors.append(i)
     return list_neighbors
 
+# creates people on each continent at a random point:
 def make_humans(boards):
     global list_humans
     index = 0
@@ -483,23 +518,24 @@ def make_humans(boards):
         for i in range(continents[cont]["max_people"]):
             finish = False
             while(not finish):
-                x = random.randint(continents[cont]["bounds"][0],continents[cont]["bounds"][2])
-                y = random.randint(continents[cont]["bounds"][1],continents[cont]["bounds"][3])
+                x = random.uniform(continents[cont]["bounds"][0],continents[cont]["bounds"][2])
+                y = random.uniform(continents[cont]["bounds"][1],continents[cont]["bounds"][3])
                 if check_spawn(x,y,i,boards):
                     list_humans.append(Human(index,x,y,cont))
                     finish = True
             index += 1
 
+# draws people on the map:
 def draw_humans(surface):
     for hum in list_humans:
         pygame.draw.circle(surface, hum.color, (hum.pos_x, hum.pos_y), 4)
 
-#def infection_die(hum):
-
+# creates a flight if an infected person gets a chance to travel, if not, the next flight is after time_for_travel:
 def make_travel(hum):
     global passenger, vector, travel,aircraft, continent_new, aircraft_pos
     if hum.try_travel():
         travel = True
+        # information about the passenger:
         passenger = hum
         continent_new = hum.continent
         start = [continents[hum.continent]["airport"][0],continents[hum.continent]["airport"][1]]
@@ -507,6 +543,7 @@ def make_travel(hum):
         end = (0, 0)
         finish = False
         list_airports = []
+        # a continent is chosen at random:
         for con in continents:
             list_airports.append(con)
         while not finish:
@@ -516,6 +553,7 @@ def make_travel(hum):
                 continue
             else:
                 finish = True
+        # sets the direction of the airplane:
         aircraft_pos = start
         vector = ((end[0] - start[0]), (end[1]) - start[1])
         angle = math.degrees(math.atan2(vector[1], vector[0]))
@@ -523,8 +561,8 @@ def make_travel(hum):
         if abs(angle) < 90:
             aircraft = pygame.transform.rotate(aircraft_right, angle)
         else:
-            #angle = 180 - abs(angle)
             aircraft = pygame.transform.rotate(aircraft_left, angle)
+        # since the person disappears from the continent, updates the information about the people:
         list_humans.remove(hum)
         list_infected.remove(hum.id)
         for i in range(hum.id, len(list_humans)):
@@ -533,8 +571,8 @@ def make_travel(hum):
                 list_infected.append(list_humans[i].id - 1)
             list_humans[i].id -= 1
 
-
-
+# moves all people in a random direction by (steps) if they are alive;
+# also updates infected information and checks for travel possibility:
 def move_humans(boards):
     global change_virus_stage,travel_ready
     for hum in list_humans:
@@ -545,7 +583,7 @@ def move_humans(boards):
             angle = random.uniform(0, 2*math.pi)
             x = hum.pos_x + math.cos(angle)*steps
             y = hum.pos_y + math.sin(angle)*steps
-            if check_movement(x,y,boards,hum.continent):
+            if check_movement(x,y,boards):
                 hum.pos_x = x
                 hum.pos_y = y
                 finish = True
@@ -566,7 +604,9 @@ def move_humans(boards):
     if change_virus_stage:
         change_virus_stage = False
 
-def speek(sound):
+# checks infected people for the possibility to talk to a healthy person;
+# if they talk, checks whether the person gets infected:
+def speak(sound):
     global list_infected
     for i in list_infected:
         if not list_humans[i].alive:
@@ -578,10 +618,10 @@ def speek(sound):
             neighbor = list_humans[index]
             if hum.try_speek(neighbor):
                 if neighbor.try_infection():
-                    #print(neighbor.lastname, neighbor.firstname, "infected")
                     infected(neighbor, hum.virus_level, hum.immunity)
                     sound.play()
 
+# main function:
 def main():
     global change_virus_stage,pause, aircraft_left, aircraft_right, travel_ready, stat_view, diagrams_view, buttons, frame, accept, main_graph
     #Main Window:
@@ -590,20 +630,21 @@ def main():
     pygame.display.set_caption("Human Infection")
     # =======================================================================================
     #Music and sounds:
-    pygame.mixer.music.load("music/background.ogg")
+    pygame.mixer.music.load("music/background.ogg") # background music
     pygame.mixer.music.set_volume(0.1)
-    sound_infected = pygame.mixer.Sound("music/sound_infected.mp3")
+    sound_infected = pygame.mixer.Sound("music/sound_infected.mp3") # sound played when a person gets infected
     sound_infected.set_volume(0.05)
     pygame.mixer.music.play(-1)
     # =======================================================================================
     #images:
-    mask = pygame.mask.from_surface(pygame.image.load("images/mask.png").convert_alpha())
-    world = pygame.image.load("images/world.png").convert()
-    stat_icon = pygame.image.load("images/stat.png").convert_alpha()
-    button_icon = pygame.image.load("images/button.png").convert_alpha()
-    play = pygame.image.load("images/play.png").convert_alpha()
-    stop = pygame.image.load("images/pause.png").convert_alpha()
+    mask = pygame.mask.from_surface(pygame.image.load("images/mask.png").convert_alpha()) # boundaries where people are allowed to be
+    world = pygame.image.load("images/world.png").convert() # world map
+    stat_icon = pygame.image.load("images/stat.png").convert_alpha() # statistics icon
+    button_icon = pygame.image.load("images/button.png").convert_alpha() # "close" button
+    play = pygame.image.load("images/play.png").convert_alpha() # play button
+    stop = pygame.image.load("images/pause.png").convert_alpha() # pause button
     play_stop = stop
+    # for all PNG images below, removes the transparent background
     aircraft_left = aircraft_right.convert_alpha()
     aircraft_right = aircraft_left.convert_alpha()
     frame = frame.convert_alpha()
@@ -684,14 +725,16 @@ def main():
                     count_travel = 0
             if ticks / count_speed >= SPEED:
                 move_humans(mask)
-                speek(sound_infected)
+                speak(sound_infected)
                 count_speed += 1
         if stat_view:
+            # draws the statistics window:
             window_stat = (0,0,screen_width/2, screen_height)
             pygame.draw.rect(screen,GRAY,window_stat)
             screen.blit(button_icon, ((screen_width/2 - button_icon.get_width() - 10),10))
             make_stats(screen)
         if diagrams_view:
+
             copy_surf = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
             window_diagrams = (0,0,screen_width,screen_height)
             pygame.draw.rect(copy_surf,GRAY,window_diagrams)
