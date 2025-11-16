@@ -52,6 +52,7 @@ main_graph = pygame.image.load("images/main_graph.png") # grid of the overall di
 # diagram information (data for each type of person and the colors of the diagram lines);
 # here you can change the line colors:
 diagram = {
+    'alive':{"list":[],"color":(255,255,255)},
     'healthy':{"list":[], "color": (17, 171, 27)},
     'infected':{"list":[], "color": (255, 0, 0)},
     'deaths':{"list":[], "color": (0,0,0)},
@@ -117,6 +118,7 @@ def make_continents():
 def refresh_stats():
     global diagram
     healthy = 0
+    alives = 0
     inf_lvl_1 = 0
     inf_lvl_2 = 0
     inf_lvl_3 = 0
@@ -131,29 +133,32 @@ def refresh_stats():
     for hum in list_humans:
         if not hum.alive:
             deaths += 1
-        elif not hum.infection:
-            healthy += 1
-            if hum.immunity == 0:
-                immun_lvl_1 += 1
-            elif hum.immunity == 1:
-                immun_lvl_2 += 1
-            elif hum.immunity == 2:
-                immun_lvl_3 += 1
-            elif hum.immunity == 3:
-                immun_lvl_4 += 1
-            else:
-                immun_lvl_5 += 1
         else:
-            infected_people += 1
-            if hum.virus_level == 1:
-                inf_lvl_1 += 1
-            elif hum.virus_level == 2:
-                inf_lvl_2 += 1
-            elif hum.virus_level == 3:
-                inf_lvl_3 += 1
+            alives += 1
+            if not hum.infection:
+                healthy += 1
+                if hum.immunity == 0:
+                    immun_lvl_1 += 1
+                elif hum.immunity == 1:
+                    immun_lvl_2 += 1
+                elif hum.immunity == 2:
+                    immun_lvl_3 += 1
+                elif hum.immunity == 3:
+                    immun_lvl_4 += 1
+                else:
+                    immun_lvl_5 += 1
             else:
-                inf_lvl_4 += 1
+                infected_people += 1
+                if hum.virus_level == 1:
+                    inf_lvl_1 += 1
+                elif hum.virus_level == 2:
+                    inf_lvl_2 += 1
+                elif hum.virus_level == 3:
+                    inf_lvl_3 += 1
+                else:
+                    inf_lvl_4 += 1
     # update the information in the diagram lists:
+    diagram['alive']['list'].append(alives)
     diagram['healthy']['list'].append(healthy)
     diagram['infected']['list'].append(infected_people)
     diagram['deaths']['list'].append(deaths)
@@ -311,6 +316,7 @@ def make_stats(surface):
 def make_buttons():
     global buttons
     buttons = {
+        "alive": {"borders":[],"active":True},
         "healthy": {"borders":[],"active": True},
         "infected": {"borders":[],"active": True},
         "deaths": {"borders":[],"active": True},
@@ -326,7 +332,7 @@ def make_buttons():
     }
     # sets the button boundaries:
     start_point_x = 250
-    start_point_y = 20
+    start_point_y = 30
     for butts in buttons:
         buttons[butts]["borders"] = [start_point_x,start_point_x + frame.get_width(), start_point_y, start_point_y + frame.get_height()]
         start_point_y += frame.get_height() + 10
@@ -346,7 +352,7 @@ def make_main_graph(surface):
         surface.blit(text, (start_text_x, start_text_y))
     # draws the graph grid:
     start_graph_x = start_text_x + 280
-    start_graph_y = buttons["infected"]["borders"][2]
+    start_graph_y = buttons["healthy"]["borders"][2] + frame.get_height() / 2
     surface.blit(main_graph, (start_graph_x, start_graph_y))
     # draws the values of the y-axis:
     cells = 11 # number of squares on the y-axis
@@ -734,7 +740,7 @@ def main():
             screen.blit(button_icon, ((screen_width/2 - button_icon.get_width() - 10),10))
             make_stats(screen)
         if diagrams_view:
-
+            # draws the overall diagram window
             copy_surf = pygame.Surface((screen_width,screen_height), pygame.SRCALPHA)
             window_diagrams = (0,0,screen_width,screen_height)
             pygame.draw.rect(copy_surf,GRAY,window_diagrams)
