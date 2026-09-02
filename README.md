@@ -1,5 +1,7 @@
 # Earth Infection Simulation
-An interactive virus spread simulation developed in Python using Pygame. The project simulates the spread of a virus across a two-dimensional map of the Earth. People move around different continents, interact with each other, become infected, recover, develop immunity, and travel between continents. The project was inspired by the core concept of Plague Inc., with the simulation mechanics implemented independently.
+An interactive virus spread simulation developed in Python using Pygame. 
+![Earth Infection Simulation](screenshots/simulation.jpg)
+The project simulates the spread of a virus across a two-dimensional map of the Earth. People move around different continents, interact with each other, become infected, recover, develop immunity, and travel between continents. The project was inspired by the core concept of Plague Inc., with the simulation mechanics implemented independently.
 
 ## Features
 - Population simulation across six regions
@@ -57,4 +59,10 @@ python main.py
 
 ## Screenshots
 
-Screenshots and demonstrations of the simulation will be added here.
+### Infection Statistics
+
+![Infection statistics](screenshots/statistics.jpg)
+
+### Detailed Statistics
+
+![Detailed statistics](screenshots/detailed-statistics.jpg)
